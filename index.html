@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Programme TV</title>
+    <title>Programme TNT</title>
     <style>
       :root {
         --bg: #0f1117;
@@ -26,7 +26,6 @@
         border-bottom: 3px solid var(--accent);
       }
       header h1 { font-size: 1.6rem; letter-spacing: 1px; }
-      header p { color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
 
       .toolbar {
         display: flex;
@@ -119,15 +118,11 @@
   </head>
   <body>
     <header>
-      <h1>📺 Programme TV</h1>
-      <p id="today"></p>
-      <p id="source" style="font-size:.8rem;margin-top:6px">Chargement des programmes…</p>
+      <h1>Programme TNT</h1>
     </header>
 
     <div class="toolbar">
-      <!-- Menu déroulant pour le choix du jour -->
       <select id="daySelect"></select>
-      <!-- Commutateur (chips) pour le mode d'affichage -->
       <div class="chips" id="modeChips"></div>
     </div>
 
@@ -136,8 +131,6 @@
     <footer>Programmes réels chargés depuis un guide XMLTV de la TNT (mise à jour chaque nuit). La variable <code>DATA</code> ne sert qu'en repli hors ligne.</footer>
 
     <script>
-      // ===== DONNÉES : modifiez cette partie avec vos programmes =====
-      // Les 25 chaînes de la TNT française (numérotation depuis juin 2025)
       const DATA = [
         { name: "TF1", logo: "#0055ff", site: "tf1.fr", cat: "Généraliste", shows: [
           { time: "14:00", title: "Les Douze Coups de Midi", genre: "Jeu" },
@@ -279,11 +272,6 @@
       function dateFromYmd(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
       const todayStr = ymd(now);
 
-      window.onerror = function (msg) {
-        var b = document.getElementById("source");
-        if (b) { b.textContent = "⚠ Erreur : " + msg; b.style.color = "#ef4444"; }
-      };
-
       var todayStart = dateFromYmd(todayStr).getTime();
       DATA.forEach(function (c) { c.shows.forEach(function (s) {
         s.start = todayStart + toMin(s.time) * 60000;
@@ -292,14 +280,6 @@
 
       var channels = DATA;
       var state = { mode: "now", date: todayStr };
-
-      function refreshDateLabel() {
-        var d = dateFromYmd(state.date);
-        document.getElementById("today").textContent =
-          d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) +
-          (state.date === todayStr ? " — aujourd'hui" : "");
-      }
-      refreshDateLabel();
 
       var BASE_URL = "https://raw.githubusercontent.com/Catch-up-TV-and-More/xmltv/master/";
       function apiUrl(dateStr) {
@@ -329,11 +309,8 @@
       }
 
       function loadPrograms() {
-        var badge = document.getElementById("source");
         var dayStart = dateFromYmd(state.date).getTime();
         var dayEnd = dayStart + 86400000;
-        badge.textContent = "Chargement des programmes…";
-        badge.style.color = "#9aa3b2";
         return fetch(apiUrl(state.date))
           .then(function (res) {
             if (!res.ok) throw new Error("HTTP " + res.status);
@@ -374,7 +351,7 @@
             }
             var list = [], key2;
             for (key2 in byCh) list.push(byCh[key2]);
-            if (!list.length) throw new Error("aucun programme pour cette date");
+            if (!list.length) throw new Error("aucun programme");
             list.sort(function (a, b) {
               var ra = 99, rb = 99;
               for (var m2 = 0; m2 < META.length; m2++) {
@@ -385,17 +362,10 @@
             });
             list.forEach(function (c) { c.shows.sort(function (a, b) { return a.start - b.start; }); });
             channels = list;
-            badge.textContent = "● Programmes réels — guide XMLTV mis à jour chaque nuit";
-            badge.style.color = "#22c55e";
           })
-          .catch(function (e) {
-            if (state.date === todayStr) {
-              channels = DATA;
-            } else {
-              channels = [];
-            }
-            badge.textContent = "○ Indisponible (" + e.message + ")";
-            badge.style.color = "#f59e0b";
+          .catch(function () {
+            if (state.date === todayStr) channels = DATA;
+            else channels = [];
           })
           .then(function () { buildModeChips(); render(); });
       }
@@ -423,7 +393,6 @@
           if (state.date !== todayStr && state.mode === "now") {
             state.mode = "day";
           }
-          refreshDateLabel();
           buildModeChips();
           loadPrograms();
         };
@@ -441,7 +410,7 @@
         modes.push({ id: "day", label: "Toute la journée" });
 
         modes.forEach(function (m) {
-          var b = document.createElement("button");
+          var b = document.button ? null : document.createElement("button");
           b.className = "chip" + (m.id === state.mode ? " active" : "");
           b.textContent = m.label;
           b.dataset.mode = m.id;
@@ -461,8 +430,10 @@
         var any = false;
         var dayStart = dateFromYmd(state.date).getTime();
         var dayEnd = dayStart + 86400000;
-        var eveStart = dayStart + 18 * 3600000;
-        var eveEnd = dayStart + 26 * 3600000;
+        // Ce soir : à partir de 20h45 jusqu'à 6h du matin le lendemain
+        var eveStart = dayStart + (20 * 3600000 + 45 * 60000); 
+        var eveEnd = dayStart + 30 * 3600000;
+
         channels.forEach(function (c) {
           var shows = c.shows
             .slice()
@@ -478,7 +449,7 @@
               shows = shows.slice(Math.max(0, idx - 1), idx + 3);
             }
           } else if (state.mode === "evening") {
-            shows = shows.filter(function (s) { return s.end > eveStart && s.start < eveEnd; });
+            shows = shows.filter(function (s) { return s.start >= eveStart && s.start < eveEnd; });
           } else {
             shows = shows.filter(function (s) { return s.end > dayStart && s.start < dayEnd; });
           }
