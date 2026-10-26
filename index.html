@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Programme TV</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --card: #1a1d27;
+        --card2: #222633;
+        --text: #eef1f6;
+        --muted: #9aa3b2;
+        --accent: #e50914;
+        --live: #22c55e;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+      header {
+        background: linear-gradient(135deg, #1a1d27, #2b1220);
+        padding: 24px 20px;
+        text-align: center;
+        border-bottom: 3px solid var(--accent);
+      }
+      header h1 { font-size: 1.6rem; letter-spacing: 1px; }
+      header p { color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        padding: 16px;
+        background: var(--card);
+      }
+      .toolbar input, .toolbar select {
+        background: var(--card2);
+        color: var(--text);
+        border: 1px solid #33394900;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        outline: none;
+      }
+      .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
+      .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+      .chip {
+        background: var(--card2);
+        border: none;
+        color: var(--muted);
+        padding: 8px 16px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all .2s;
+      }
+      .chip.active { background: var(--accent); color: #fff; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 16px;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .channel {
+        background: var(--card);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #262b38;
+      }
+      .channel-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--card2);
+      }
+      .logo {
+        width: 42px; height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.05rem;
+        color: #fff;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; border-radius: 10px; }
+      .channel-head h2 { font-size: 1rem; }
+      .channel-head .cat { font-size: .75rem; color: var(--muted); }
+
+      .slot { display: flex; gap: 12px; padding: 10px 16px; border-top: 1px solid #262b38; }
+      .slot time { color: var(--accent); font-weight: 600; font-size: 0.85rem; min-width: 44px; }
+      .slot .info { flex: 1; }
+      .slot .title { font-size: 0.92rem; }
+      .slot .genre { font-size: 0.75rem; color: var(--muted); }
+      .slot.live { background: rgba(34,197,94,.08); }
+      .slot.live .title::after {
+        content: " ● EN DIRECT";
+        color: var(--live);
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+      }
+      .slot.past { opacity: .45; }
+
+      footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 24px; }
+      @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>📺 Programme TV</h1>
+      <p id="today"></p>
+      <p id="source" style="font-size:.8rem;margin-top:6px">Chargement des programmes…</p>
+    </header>
+
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Rechercher une émission…" />
+      <div class="chips" id="categories"></div>
+      <select id="nowFilter">
+        <option value="all">Tout le programme</option>
+        <option value="now">En cours actuellement</option>
+      </select>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <footer>Programmes réels chargés depuis un guide XMLTV de la TNT (mise à jour chaque nuit). La variable <code>DATA</code> ne sert qu'en repli hors ligne.</footer>
+
+    <script>
+      // ===== DONNÉES : modifiez cette partie avec vos programmes =====
+      // Les 25 chaînes de la TNT française (numérotation depuis juin 2025)
+      const DATA = [
+        { name: "TF1", logo: "#0055ff", site: "tf1.fr", cat: "Généraliste", shows: [
+          { time: "14:00", title: "Les Douze Coups de Midi", genre: "Jeu" },
+          { time: "20:50", title: "Capitaine Marleau", genre: "Série" },
+          { time: "21:45", title: "Grand Journal Spécial", genre: "Magazine" },
+          { time: "23:10", title: "Film : Le Grand Bleu", genre: "Film" },
+        ]},
+        { name: "France 2", site: "france.tv", logo: "#0066cc", cat: "Généraliste", shows: [
+          { time: "16:00", title: "Un si grand soleil", genre: "Série" },
+          { time: "20:35", title: "Journal de 20h", genre: "Info" },
+          { time: "21:00", title: "Complément d'enquête", genre: "Documentaire" },
+          { time: "22:40", title: "Théâtre : Le Misanthrope", genre: "Culture" },
+        ]},
+        { name: "France 3", logo: "#0a7d4f", site: "france.tv", cat: "Généraliste", shows: [
+          { time: "17:30", title: "Slam", genre: "Jeu" },
+          { time: "19:00", title: "19/20 National", genre: "Info" },
+          { time: "20:55", title: "Tout le sport", genre: "Sport" },
+          { time: "22:15", title: "Des racines et des ailes", genre: "Documentaire" },
+        ]},
+        { name: "France 5", logo: "#e6b800", site: "france.tv", cat: "Généraliste", shows: [
+          { time: "09:50", title: "C dans l'air", genre: "Magazine" },
+          { time: "20:55", title: "Le Doc : Nos campagnes", genre: "Documentaire" },
+          { time: "22:30", title: "La Grande Librairie", genre: "Culture" },
+        ]},
+        { name: "M6", logo: "#ffcc00", site: "m6.fr", cat: "Généraliste", shows: [
+          { time: "18:30", title: "Scènes de ménages", genre: "Série" },
+          { time: "20:45", title: "Capital", genre: "Magazine" },
+          { time: "21:40", title: "Film : Intouchables", genre: "Film" },
+          { time: "23:35", title: "Hexagone", genre: "Magazine" },
+        ]},
+        { name: "Arte", logo: "#ff4b12", site: "arte.tv", cat: "Culture", shows: [
+          { time: "16:45", title: "Karambolage", genre: "Culture" },
+          { time: "20:55", title: "Le Doc du soir : Océans", genre: "Documentaire" },
+          { time: "22:30", title: "Concert : Orchestre de Paris", genre: "Culture" },
+        ]},
+        { name: "LCP / Public Sénat", logo: "#003366", site: "lcp.fr", cat: "Info", shows: [
+          { time: "18:30", title: "Questions au gouvernement", genre: "Info" },
+          { time: "20:30", title: "Le grand rendez-vous", genre: "Info" },
+          { time: "22:00", title: "LCP Assemblée nationale", genre: "Info" },
+        ]},
+        { name: "W9", logo: "#7a00ff", site: "w9.fr", cat: "Généraliste", shows: [
+          { time: "17:40", title: "W9 Mag", genre: "Magazine" },
+          { time: "20:50", title: "Film : Bienvenue chez les Ch'tis", genre: "Film" },
+          { time: "22:45", title: "Top Hits : les clips", genre: "Musique" },
+        ]},
+        { name: "TMC", logo: "#e6007e", site: "tmc.tf1.fr", cat: "Généraliste", shows: [
+          { time: "19:20", title: "Quotidien", genre: "Magazine" },
+          { time: "21:05", title: "Film : Le Grand Restaurant", genre: "Film" },
+          { time: "22:50", title: "African Tours", genre: "Magazine" },
+        ]},
+        { name: "TFX", logo: "#ff6600", site: "tfx.tf1.fr", cat: "Généraliste", shows: [
+          { time: "18:15", title: "Un dîner presque parfait", genre: "Divertissement" },
+          { time: "21:00", title: "Film : Bronzés 3", genre: "Film" },
+          { time: "22:40", title: "Sept à Huit Life", genre: "Magazine" },
+        ]},
+        { name: "Gulli", logo: "#8bc34a", site: "gulli.fr", cat: "Jeunesse", shows: [
+          { time: "14:00", title: "Pokémon", genre: "Jeunesse" },
+          { time: "17:10", title: "Miraculous : Les Aventures de Ladybug", genre: "Jeunesse" },
+          { time: "20:00", title: "Film d'animation : Kirikou", genre: "Jeunesse" },
+          { time: "21:30", title: "Gulli Ciné Club", genre: "Jeunesse" },
+        ]},
+        { name: "BFM TV", logo: "#d40000", site: "bfmtv.com", cat: "Info", shows: [
+          { time: "18:00", title: "Au coeur du crime", genre: "Info" },
+          { time: "20:00", title: "Le 20-00", genre: "Info" },
+          { time: "22:00", title: "BFM Story", genre: "Info" },
+        ]},
+        { name: "CNews", logo: "#1e90ff", site: "cnews.fr", cat: "Info", shows: [
+          { time: "19:45", title: "L'Heure des Pros", genre: "Info" },
+          { time: "21:00", title: "Punchline", genre: "Info" },
+          { time: "23:00", title: "La libre opinion", genre: "Info" },
+        ]},
+        { name: "LCI", logo: "#c8102e", site: "lci.fr", cat: "Info", shows: [
+          { time: "18:20", title: "Le Grand Journal", genre: "Info" },
+          { time: "20:30", title: "24H BFM/LCI", genre: "Info" },
+          { time: "22:00", title: "On se dit tout", genre: "Info" },
+        ]},
+        { name: "France Info", logo: "#ff3d00", site: "francetvinfo.fr", cat: "Info", shows: [
+          { time: "19:30", title: "Le Monde d'élise", genre: "Info" },
+          { time: "20:00", title: "JT de 20h", genre: "Info" },
+          { time: "22:00", title: "L'info du vrai", genre: "Info" },
+        ]},
+        { name: "T18", logo: "#2196f3", site: "t18.fr", cat: "Généraliste", shows: [
+          { time: "19:00", title: "Le 18-20", genre: "Magazine" },
+          { time: "21:00", title: "Film : La Famille Bélier", genre: "Film" },
+          { time: "22:40", title: "La Grande Interview", genre: "Info" },
+        ]},
+        { name: "OF TV", logo: "#009688", site: "oftv.fr", cat: "Généraliste", shows: [
+          { time: "13:30", title: "OF Mag régional", genre: "Magazine" },
+          { time: "20:55", title: "Documentaire : Nos terroirs", genre: "Documentaire" },
+          { time: "22:00", title: "Le débat Ouest-France", genre: "Info" },
+        ]},
+        { name: "France 4", logo: "#f47b20", site: "france.tv", cat: "Jeunesse", shows: [
+          { time: "14:20", title: "Les Z'amours des ados", genre: "Jeunesse" },
+          { time: "17:00", title: "L'École des fans", genre: "Jeunesse" },
+          { time: "20:35", title: "Fort Boyard", genre: "Divertissement" },
+        ]},
+        { name: "CStar", logo: "#9c27b0", site: "cstar.fr", cat: "Généraliste", shows: [
+          { time: "18:40", title: "L'œil du tigri", genre: "Divertissement" },
+          { time: "20:50", title: "Film : The Greatest Showman", genre: "Film" },
+          { time: "22:35", title: "Le Tube : clips et hits", genre: "Musique" },
+        ]},
+        { name: "RMC Story", logo: "#ff5722", site: "rmcstory.fr", cat: "Généraliste", shows: [
+          { time: "17:55", title: "Apocalypse : la série", genre: "Documentaire" },
+          { time: "20:55", title: "Doc : Chocs du siècle", genre: "Documentaire" },
+          { time: "22:30", title: "Les Enquêtes impossibles", genre: "Documentaire" },
+        ]},
+        { name: "RMC Découverte", logo: "#ff9800", site: "rmcdecouverte.fr", cat: "Documentaire", shows: [
+          { time: "20:40", title: "Doc : Le monde des trains", genre: "Documentaire" },
+          { time: "21:45", title: "Top Gear France", genre: "Divertissement" },
+          { time: "22:40", title: "Doc : Chantiers XXL", genre: "Documentaire" },
+        ]},
+        { name: "TF1 Séries Films", logo: "#3f51b5", site: "tf1seriesfilms.fr", cat: "Cinéma / Séries", shows: [
+          { time: "15:00", title: "Série : Camping Paradis", genre: "Série" },
+          { time: "20:55", title: "Série : Le Grand Jour", genre: "Série" },
+          { time: "22:30", title: "Film : Qu'est-ce qu'on a fait au Bon Dieu ?", genre: "Film" },
+        ]},
+        { name: "6ter", logo: "#00bcd4", site: "6ter.fr", cat: "Généraliste", shows: [
+          { time: "18:10", title: "Un jour, un doc", genre: "Documentaire" },
+          { time: "20:45", title: "Film : Astérix et Obélix", genre: "Film" },
+          { time: "22:40", title: "Mécaniques du monde", genre: "Documentaire" },
+        ]},
+        { name: "RéelsTV", logo: "#e91e63", site: "reelstv.fr", cat: "Documentaire", shows: [
+          { time: "20:50", title: "Doc : Histoires vraies", genre: "Documentaire" },
+          { time: "21:55", title: "Enquête de terrain", genre: "Documentaire" },
+          { time: "23:00", title: "Le vrai du faux", genre: "Magazine" },
+        ]},
+        { name: "Gong", logo: "#607d8b", site: "gong.fr", cat: "Jeunesse", shows: [
+          { time: "14:30", title: "Anime : Naruto", genre: "Jeunesse" },
+          { time: "18:00", title: "Anime : One Piece", genre: "Jeunesse" },
+          { time: "20:00", title: "Anime Movie : Your Name", genre: "Jeunesse" },
+        ]},
+      ];
+
+      const toMin = t => (+t.split(":")[0]) * 60 + (+t.split(":")[1]);
+      const now = new Date();
+      const nowTs = now.getTime();
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const dayEnd = dayStart + 86400000;
+      const toMin = t => (+t.split(":")[0]) * 60 + (+t.split(":")[1]);
+      const hhmm = ts => { const d = new Date(ts); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+
+      // Le repli (données d'exemple) reçoit des horodatages plausibles
+      DATA.forEach(c => c.shows.forEach(s => {
+        s.start = dayStart + toMin(s.time) * 60000;
+        s.end = s.start + 90 * 60000;
+      }));
+
+      let channels = DATA; // remplacé par les vrais programmes si l'API répond
+      let state = { q: "", cat: "Toutes", mode: "all" };
+
+      document.getElementById("today").textContent =
+        now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+      // ===== Vrais programmes : guide XMLTV de la TNT, mis à jour chaque nuit =====
+      const API_URL = "https://raw.githubusercontent.com/Catch-up-TV-and-More/xmltv/master/tv_guide_fr_tnt.xml";
+      const norm = n => (n || "").toLowerCase().replace(/[\s:._\-']/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const META = DATA; // couleurs + catégories connues
+      function metaFor(name) {
+        const key = norm(name);
+        const m = META.find(c => norm(c.name) === key) ||
+                  META.find(c => key.startsWith(norm(c.name)) || norm(c.name).startsWith(key));
+        return m || { name, logo: "#334155", cat: "TNT", site: null };
+      }
+      function parseXmltvDate(s) {
+        const m = (s || "").match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/);
+        return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : null;
+      }
+
+      async function loadPrograms() {
+        const badge = document.getElementById("source");
+        try {
+          const res = await fetch(API_URL);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+          if (xml.querySelector("parsererror")) throw new Error("XML invalide");
+          const infos = {};
+          xml.querySelectorAll("channel").forEach(ch => {
+            infos[ch.getAttribute("id")] = {
+              name: ch.querySelector("display-name")?.textContent || ch.getAttribute("id"),
+              icon: ch.querySelector("icon")?.getAttribute("src")
+            };
+          });
+          const byCh = {};
+          xml.querySelectorAll("programme").forEach(p => {
+            const info = infos[p.getAttribute("channel")];
+            if (!info) return;
+            const start = parseXmltvDate(p.getAttribute("start"));
+            if (start === null) return;
+            const stop = parseXmltvDate(p.getAttribute("stop"));
+            const end = stop !== null ? stop : start + 2 * 3600000;
+            if (!(start < dayEnd && end > dayStart)) return; // programmes d'aujourd'hui
+            const meta = metaFor(info.name);
+            (byCh[info.name] ??= { name: info.name, icon: info.icon, logo: meta.logo, cat: meta.cat, site: meta.site, shows: [] })
+              .shows.push({
+                time: hhmm(start), start, end,
+                title: p.querySelector("title")?.textContent.trim() || "Programme",
+                genre: p.querySelector("category")?.textContent.trim() || "Programme"
+              });
+          });
+          const list = Object.values(byCh);
+          if (!list.length) throw new Error("aucun programme");
+          // Ordre TNT : celui de META, les inconnues à la fin
+          const rank = c => { const i = META.findIndex(m => norm(m.name) === norm(c.name)); return i < 0 ? 99 : i; };
+          list.sort((a, b) => rank(a) - rank(b));
+          channels = list;
+          badge.textContent = "● Programmes réels — guide XMLTV mis à jour chaque nuit";
+          badge.style.color = "#22c55e";
+        } catch (e) {
+          badge.textContent = "○ Hors ligne — affichage des données d'exemple";
+          badge.style.color = "#f59e0b";
+        }
+        buildChips();
+        render();
+      }
+
+      function buildChips() {
+        const catBox = document.getElementById("categories");
+        catBox.innerHTML = "";
+        ["Toutes", ...new Set(channels.map(c => c.cat))].forEach(c => {
+          const b = document.createElement("button");
+          b.className = "chip" + (c === state.cat ? " active" : "");
+          b.textContent = c;
+          b.onclick = () => {
+            state.cat = c;
+            [...catBox.children].forEach(x => x.classList.toggle("active", x === b));
+            render();
+          };
+          catBox.appendChild(b);
+        });
+      }
+
+      document.getElementById("search").oninput = e => { state.q = e.target.value.toLowerCase(); render(); };
+      document.getElementById("nowFilter").onchange = e => { state.mode = e.target.value; render(); };
+
+      function render() {
+        const grid = document.getElementById("grid");
+        grid.innerHTML = "";
+        channels.filter(c => state.cat === "Toutes" || c.cat === state.cat)
+          .forEach(c => {
+            const shows = c.shows
+              .slice()
+              .sort((a, b) => a.start - b.start)
+              .filter(s => s.title.toLowerCase().includes(state.q) || s.genre.toLowerCase().includes(state.q))
+              .filter(s => state.mode === "all" || (s.start <= nowTs && nowTs < s.end));
+            if (!shows.length) return;
+            const card = document.createElement("div");
+            card.className = "channel";
+            card.innerHTML = `
+              <div class="channel-head">
+                <div class="logo" style="background:${c.logo}">${c.name.slice(0, 2)}</div>
+                <div><h2>${c.name}</h2><div class="cat">${c.cat}</div></div>
+              </div>`;
+            // Vrai logo : logo officiel du guide, puis Clearbit, puis favicon, puis initiales
+            const logoBox = card.querySelector(".logo");
+            const img = document.createElement("img");
+            img.alt = "Logo " + c.name;
+            img.loading = "lazy";
+            img.src = c.icon || "https://logo.clearbit.com/" + c.site + "?size=84";
+            img.onerror = () => {
+              if (c.site) {
+                img.onerror = () => img.remove(); // garde les initiales
+                img.src = "https://www.google.com/s2/favicons?sz=64&domain=" + c.site;
+              } else img.remove();
+            };
+            logoBox.appendChild(img);
+            shows.forEach(s => {
+              const live = s.start <= nowTs && nowTs < s.end;
+              const past = s.end <= nowTs;
+              const row = document.createElement("div");
+              row.className = "slot" + (live ? " live" : "") + (past ? " past" : "");
+              row.innerHTML = `<time>${s.time}</time>
+                <div class="info"><div class="title">${s.title}</div><div class="genre">${s.genre}</div></div>`;
+              card.appendChild(row);
+            });
+            grid.appendChild(card);
+          });
+        if (!grid.children.length) grid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#9aa3b2;padding:40px'>Aucune émission trouvée.</p>";
+      }
+      buildChips();
+      render();
+      loadPrograms();
+    </script>
+  </body>
+</html>
