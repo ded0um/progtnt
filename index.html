@@ -13,6 +13,7 @@
         --muted: #9aa3b2;
         --accent: #e50914;
         --live: #22c55e;
+        color-scheme: dark;
         font-family: "Segoe UI", system-ui, sans-serif;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -122,11 +123,9 @@
 
     <div class="toolbar">
       <input type="search" id="search" placeholder="Rechercher une émission…" />
+      <input type="date" id="dayPicker" />
+      <select id="modeFilter"></select>
       <div class="chips" id="categories"></div>
-      <select id="nowFilter">
-        <option value="all">Tout le programme</option>
-        <option value="now">En cours actuellement</option>
-      </select>
     </div>
 
     <div class="grid" id="grid"></div>
@@ -271,10 +270,11 @@
 
       const now = new Date();
       const nowTs = now.getTime();
-      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      const dayEnd = dayStart + 86400000;
       const toMin = t => (+t.split(":")[0]) * 60 + (+t.split(":")[1]);
       const hhmm = ts => { const d = new Date(ts); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+      function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+      function dateFromYmd(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+      const todayStr = ymd(now);
 
       // Affiche toute erreur JS dans le badge (diagnostic)
       window.onerror = function (msg) {
@@ -282,20 +282,31 @@
         if (b) { b.textContent = "⚠ Erreur : " + msg; b.style.color = "#ef4444"; }
       };
 
-      // Le repli (données d'exemple) reçoit des horodatages plausibles
+      // Le repli (données d'exemple) est calé sur aujourd'hui
+      var todayStart = dateFromYmd(todayStr).getTime();
       DATA.forEach(function (c) { c.shows.forEach(function (s) {
-        s.start = dayStart + toMin(s.time) * 60000;
+        s.start = todayStart + toMin(s.time) * 60000;
         s.end = s.start + 90 * 60000;
       }); });
 
       var channels = DATA; // remplacé par les vrais programmes si l'API répond
-      var state = { q: "", cat: "Toutes", mode: "all" };
+      var state = { q: "", cat: "Toutes", mode: "now", date: todayStr };
 
-      document.getElementById("today").textContent =
-        now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      function refreshDateLabel() {
+        var d = dateFromYmd(state.date);
+        document.getElementById("today").textContent =
+          d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) +
+          (state.date === todayStr ? " — aujourd'hui" : "");
+      }
+      refreshDateLabel();
 
       // ===== Vrais programmes : guide XMLTV de la TNT, mis à jour chaque nuit =====
-      const API_URL = "https://raw.githubusercontent.com/Catch-up-TV-and-More/xmltv/master/tv_guide_fr_tnt.xml";
+      var BASE_URL = "https://raw.githubusercontent.com/Catch-up-TV-and-More/xmltv/master/";
+      function apiUrl(dateStr) {
+        return dateStr === todayStr
+          ? BASE_URL + "tv_guide_fr_tnt.xml"
+          : BASE_URL + "tv_guide_fr_" + dateStr.replace(/-/g, "") + ".xml";
+      }
       function norm(n) {
         return (n || "").toLowerCase().replace(/[\s:._\-']/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       }
@@ -303,16 +314,14 @@
         var e = parent.getElementsByTagName(tag)[0];
         return e && e.textContent ? e.textContent.trim() : def;
       }
-      var META = DATA; // couleurs + catégories connues
+      var META = DATA; // couleurs + catégories + ordre TNT
       function metaFor(name) {
-        var key = norm(name);
-        for (var i = 0; i < META.length; i++) {
-          if (norm(META[i].name) === key) return META[i];
+        var key = norm(name), i;
+        for (i = 0; i < META.length; i++) if (norm(META[i].name) === key) return META[i];
+        for (i = 0; i < META.length; i++) {
+          if (key.indexOf(norm(META[i].name)) === 0 || norm(META[i].name).indexOf(key) === 0) return META[i];
         }
-        for (var j = 0; j < META.length; j++) {
-          if (key.indexOf(norm(META[j].name)) === 0 || norm(META[j].name).indexOf(key) === 0) return META[j];
-        }
-        return { name: name, logo: "#334155", cat: "TNT", site: null };
+        return null; // chaîne hors TNT : ignorée
       }
       function parseXmltvDate(s) {
         var m = (s || "").match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/);
@@ -321,7 +330,11 @@
 
       function loadPrograms() {
         var badge = document.getElementById("source");
-        return fetch(API_URL)
+        var dayStart = dateFromYmd(state.date).getTime();
+        var dayEnd = dayStart + 86400000;
+        badge.textContent = "Chargement des programmes…";
+        badge.style.color = "#9aa3b2";
+        return fetch(apiUrl(state.date))
           .then(function (res) {
             if (!res.ok) throw new Error("HTTP " + res.status);
             return res.text();
@@ -337,17 +350,20 @@
                 icon: iconEl ? iconEl.getAttribute("src") : null
               };
             }
+            // Fenêtre large : nuit précédente jusqu'à 3h du matin suivant
+            var winStart = dayStart - 6 * 3600000, winEnd = dayEnd + 3 * 3600000;
             var byCh = {}, progs = xml.getElementsByTagName("programme");
             for (var k = 0; k < progs.length; k++) {
               var p = progs[k];
               var info = infos[p.getAttribute("channel")];
               if (!info) continue;
+              var meta = metaFor(info.name);
+              if (!meta) continue; // chaîne hors TNT
               var start = parseXmltvDate(p.getAttribute("start"));
               if (start === null) continue;
               var end = parseXmltvDate(p.getAttribute("stop"));
               if (end === null) end = start + 2 * 3600000;
-              if (!(start < dayEnd && end > dayStart)) continue; // programmes d'aujourd'hui
-              var meta = metaFor(info.name);
+              if (!(start < winEnd && end > winStart)) continue;
               if (!byCh[info.name]) {
                 byCh[info.name] = { name: info.name, icon: info.icon, logo: meta.logo, cat: meta.cat, site: meta.site, shows: [] };
               }
@@ -359,7 +375,7 @@
             }
             var list = [], key2;
             for (key2 in byCh) list.push(byCh[key2]);
-            if (!list.length) throw new Error("aucun programme aujourd'hui");
+            if (!list.length) throw new Error("aucun programme pour cette date");
             // Ordre TNT : celui de META, les inconnues à la fin
             list.sort(function (a, b) {
               var ra = 99, rb = 99;
@@ -369,15 +385,38 @@
               }
               return ra - rb;
             });
+            list.forEach(function (c) { c.shows.sort(function (a, b) { return a.start - b.start; }); });
             channels = list;
             badge.textContent = "● Programmes réels — guide XMLTV mis à jour chaque nuit";
             badge.style.color = "#22c55e";
           })
           .catch(function (e) {
-            badge.textContent = "○ Hors ligne — affichage des données d'exemple (" + e.message + ")";
+            if (state.date === todayStr) {
+              channels = DATA;
+            } else {
+              channels = [];
+            }
+            badge.textContent = "○ Indisponible (" + e.message + ")";
             badge.style.color = "#f59e0b";
           })
-          .then(function () { buildChips(); render(); });
+          .then(function () { buildModeSelect(); buildChips(); render(); });
+      }
+
+      function buildModeSelect() {
+        var sel = document.getElementById("modeFilter");
+        var isToday = state.date === todayStr;
+        if (!isToday && state.mode === "now") state.mode = "day";
+        var opts = isToday
+          ? [["now", "En ce moment"], ["evening", "Ce soir"], ["day", "Toute la journée"]]
+          : [["day", "Toute la journée"], ["evening", "Ce soir"]];
+        sel.innerHTML = "";
+        opts.forEach(function (o) {
+          var op = document.createElement("option");
+          op.value = o[0];
+          op.textContent = o[1];
+          if (o[0] === state.mode) op.selected = true;
+          sel.appendChild(op);
+        });
       }
 
       function buildChips() {
@@ -400,26 +439,55 @@
       }
 
       document.getElementById("search").oninput = function (e) { state.q = e.target.value.toLowerCase(); render(); };
-      document.getElementById("nowFilter").onchange = function (e) { state.mode = e.target.value; render(); };
+      document.getElementById("modeFilter").onchange = function (e) { state.mode = e.target.value; render(); };
+      var picker = document.getElementById("dayPicker");
+      picker.value = todayStr;
+      picker.min = todayStr;
+      picker.max = ymd(new Date(todayStart + 7 * 86400000)); // 7 jours de guide disponibles
+      picker.onchange = function (e) {
+        if (!e.target.value) return;
+        state.date = e.target.value;
+        state.mode = state.date === todayStr ? "now" : "day";
+        refreshDateLabel();
+        loadPrograms();
+      };
 
       function render() {
         var grid = document.getElementById("grid");
         grid.innerHTML = "";
         var any = false;
+        var dayStart = dateFromYmd(state.date).getTime();
+        var dayEnd = dayStart + 86400000;
+        var eveStart = dayStart + 18 * 3600000; // 18h
+        var eveEnd = dayStart + 26 * 3600000;   // 2h du matin suivant
         channels.forEach(function (c) {
           if (state.cat !== "Toutes" && c.cat !== state.cat) return;
           var shows = c.shows
             .slice()
             .sort(function (a, b) { return a.start - b.start; })
-            .filter(function (s) { return s.title.toLowerCase().indexOf(state.q) >= 0 || s.genre.toLowerCase().indexOf(state.q) >= 0; })
-            .filter(function (s) { return state.mode === "all" || (s.start <= nowTs && nowTs < s.end); });
+            .filter(function (s) { return s.title.toLowerCase().indexOf(state.q) >= 0 || s.genre.toLowerCase().indexOf(state.q) >= 0; });
+          if (state.mode === "now") {
+            var idx = -1;
+            for (var s2 = 0; s2 < shows.length; s2++) {
+              if (shows[s2].start <= nowTs && nowTs < shows[s2].end) { idx = s2; break; }
+            }
+            if (idx < 0) {
+              shows = shows.filter(function (s) { return s.start > nowTs; }).slice(0, 3);
+            } else {
+              shows = shows.slice(Math.max(0, idx - 1), idx + 3); // précédent + en cours + 2 suivants
+            }
+          } else if (state.mode === "evening") {
+            shows = shows.filter(function (s) { return s.end > eveStart && s.start < eveEnd; });
+          } else {
+            shows = shows.filter(function (s) { return s.end > dayStart && s.start < dayEnd; });
+          }
           if (!shows.length) return;
           any = true;
           var card = document.createElement("div");
           card.className = "channel";
           card.innerHTML =
             '<div class="channel-head">' +
-              '<div class="logo" style="background:' + c.logo + '">' + c.name.slice(0, 2) + '</div>' +
+              '<div class="logo" style="background:' + c.logo + '"><span class="init">' + c.name.slice(0, 2) + "</span></div>" +
               '<div><h2>' + c.name + '</h2><div class="cat">' + c.cat + '</div></div>' +
             '</div>';
           // Vrai logo : logo officiel du guide, puis Clearbit, puis favicon, puis initiales
@@ -428,6 +496,10 @@
           img.alt = "Logo " + c.name;
           img.loading = "lazy";
           img.src = c.icon || ("https://logo.clearbit.com/" + c.site + "?size=84");
+          img.onload = function () {
+            var sp = logoBox.querySelector(".init");
+            if (sp) sp.style.display = "none"; // masque les initiales dès que le vrai logo est chargé
+          };
           img.onerror = function () {
             if (c.site) {
               img.onerror = function () { img.remove(); }; // garde les initiales
@@ -448,6 +520,7 @@
         });
         if (!any) grid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#9aa3b2;padding:40px'>Aucune émission trouvée.</p>";
       }
+      buildModeSelect();
       buildChips();
       render();
       loadPrograms();
