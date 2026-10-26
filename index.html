@@ -269,7 +269,6 @@
         ]},
       ];
 
-      const toMin = t => (+t.split(":")[0]) * 60 + (+t.split(":")[1]);
       const now = new Date();
       const nowTs = now.getTime();
       const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -277,142 +276,177 @@
       const toMin = t => (+t.split(":")[0]) * 60 + (+t.split(":")[1]);
       const hhmm = ts => { const d = new Date(ts); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
 
+      // Affiche toute erreur JS dans le badge (diagnostic)
+      window.onerror = function (msg) {
+        var b = document.getElementById("source");
+        if (b) { b.textContent = "⚠ Erreur : " + msg; b.style.color = "#ef4444"; }
+      };
+
       // Le repli (données d'exemple) reçoit des horodatages plausibles
-      DATA.forEach(c => c.shows.forEach(s => {
+      DATA.forEach(function (c) { c.shows.forEach(function (s) {
         s.start = dayStart + toMin(s.time) * 60000;
         s.end = s.start + 90 * 60000;
-      }));
+      }); });
 
-      let channels = DATA; // remplacé par les vrais programmes si l'API répond
-      let state = { q: "", cat: "Toutes", mode: "all" };
+      var channels = DATA; // remplacé par les vrais programmes si l'API répond
+      var state = { q: "", cat: "Toutes", mode: "all" };
 
       document.getElementById("today").textContent =
         now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
       // ===== Vrais programmes : guide XMLTV de la TNT, mis à jour chaque nuit =====
       const API_URL = "https://raw.githubusercontent.com/Catch-up-TV-and-More/xmltv/master/tv_guide_fr_tnt.xml";
-      const norm = n => (n || "").toLowerCase().replace(/[\s:._\-']/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const META = DATA; // couleurs + catégories connues
+      function norm(n) {
+        return (n || "").toLowerCase().replace(/[\s:._\-']/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+      function elText(parent, tag, def) {
+        var e = parent.getElementsByTagName(tag)[0];
+        return e && e.textContent ? e.textContent.trim() : def;
+      }
+      var META = DATA; // couleurs + catégories connues
       function metaFor(name) {
-        const key = norm(name);
-        const m = META.find(c => norm(c.name) === key) ||
-                  META.find(c => key.startsWith(norm(c.name)) || norm(c.name).startsWith(key));
-        return m || { name, logo: "#334155", cat: "TNT", site: null };
+        var key = norm(name);
+        for (var i = 0; i < META.length; i++) {
+          if (norm(META[i].name) === key) return META[i];
+        }
+        for (var j = 0; j < META.length; j++) {
+          if (key.indexOf(norm(META[j].name)) === 0 || norm(META[j].name).indexOf(key) === 0) return META[j];
+        }
+        return { name: name, logo: "#334155", cat: "TNT", site: null };
       }
       function parseXmltvDate(s) {
-        const m = (s || "").match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/);
+        var m = (s || "").match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/);
         return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : null;
       }
 
-      async function loadPrograms() {
-        const badge = document.getElementById("source");
-        try {
-          const res = await fetch(API_URL);
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
-          if (xml.querySelector("parsererror")) throw new Error("XML invalide");
-          const infos = {};
-          xml.querySelectorAll("channel").forEach(ch => {
-            infos[ch.getAttribute("id")] = {
-              name: ch.querySelector("display-name")?.textContent || ch.getAttribute("id"),
-              icon: ch.querySelector("icon")?.getAttribute("src")
-            };
-          });
-          const byCh = {};
-          xml.querySelectorAll("programme").forEach(p => {
-            const info = infos[p.getAttribute("channel")];
-            if (!info) return;
-            const start = parseXmltvDate(p.getAttribute("start"));
-            if (start === null) return;
-            const stop = parseXmltvDate(p.getAttribute("stop"));
-            const end = stop !== null ? stop : start + 2 * 3600000;
-            if (!(start < dayEnd && end > dayStart)) return; // programmes d'aujourd'hui
-            const meta = metaFor(info.name);
-            (byCh[info.name] ??= { name: info.name, icon: info.icon, logo: meta.logo, cat: meta.cat, site: meta.site, shows: [] })
-              .shows.push({
-                time: hhmm(start), start, end,
-                title: p.querySelector("title")?.textContent.trim() || "Programme",
-                genre: p.querySelector("category")?.textContent.trim() || "Programme"
+      function loadPrograms() {
+        var badge = document.getElementById("source");
+        return fetch(API_URL)
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.text();
+          })
+          .then(function (text) {
+            var xml = new DOMParser().parseFromString(text, "application/xml");
+            if (xml.getElementsByTagName("parsererror").length) throw new Error("XML invalide");
+            var chs = xml.getElementsByTagName("channel"), infos = {};
+            for (var i = 0; i < chs.length; i++) {
+              var iconEl = chs[i].getElementsByTagName("icon")[0];
+              infos[chs[i].getAttribute("id")] = {
+                name: elText(chs[i], "display-name", chs[i].getAttribute("id")),
+                icon: iconEl ? iconEl.getAttribute("src") : null
+              };
+            }
+            var byCh = {}, progs = xml.getElementsByTagName("programme");
+            for (var k = 0; k < progs.length; k++) {
+              var p = progs[k];
+              var info = infos[p.getAttribute("channel")];
+              if (!info) continue;
+              var start = parseXmltvDate(p.getAttribute("start"));
+              if (start === null) continue;
+              var end = parseXmltvDate(p.getAttribute("stop"));
+              if (end === null) end = start + 2 * 3600000;
+              if (!(start < dayEnd && end > dayStart)) continue; // programmes d'aujourd'hui
+              var meta = metaFor(info.name);
+              if (!byCh[info.name]) {
+                byCh[info.name] = { name: info.name, icon: info.icon, logo: meta.logo, cat: meta.cat, site: meta.site, shows: [] };
+              }
+              byCh[info.name].shows.push({
+                time: hhmm(start), start: start, end: end,
+                title: elText(p, "title", "Programme"),
+                genre: elText(p, "category", "Programme")
               });
-          });
-          const list = Object.values(byCh);
-          if (!list.length) throw new Error("aucun programme");
-          // Ordre TNT : celui de META, les inconnues à la fin
-          const rank = c => { const i = META.findIndex(m => norm(m.name) === norm(c.name)); return i < 0 ? 99 : i; };
-          list.sort((a, b) => rank(a) - rank(b));
-          channels = list;
-          badge.textContent = "● Programmes réels — guide XMLTV mis à jour chaque nuit";
-          badge.style.color = "#22c55e";
-        } catch (e) {
-          badge.textContent = "○ Hors ligne — affichage des données d'exemple";
-          badge.style.color = "#f59e0b";
-        }
-        buildChips();
-        render();
+            }
+            var list = [], key2;
+            for (key2 in byCh) list.push(byCh[key2]);
+            if (!list.length) throw new Error("aucun programme aujourd'hui");
+            // Ordre TNT : celui de META, les inconnues à la fin
+            list.sort(function (a, b) {
+              var ra = 99, rb = 99;
+              for (var m2 = 0; m2 < META.length; m2++) {
+                if (norm(META[m2].name) === norm(a.name)) ra = m2;
+                if (norm(META[m2].name) === norm(b.name)) rb = m2;
+              }
+              return ra - rb;
+            });
+            channels = list;
+            badge.textContent = "● Programmes réels — guide XMLTV mis à jour chaque nuit";
+            badge.style.color = "#22c55e";
+          })
+          .catch(function (e) {
+            badge.textContent = "○ Hors ligne — affichage des données d'exemple (" + e.message + ")";
+            badge.style.color = "#f59e0b";
+          })
+          .then(function () { buildChips(); render(); });
       }
 
       function buildChips() {
-        const catBox = document.getElementById("categories");
+        var catBox = document.getElementById("categories");
         catBox.innerHTML = "";
-        ["Toutes", ...new Set(channels.map(c => c.cat))].forEach(c => {
-          const b = document.createElement("button");
+        var cats = ["Toutes"], i;
+        for (i = 0; i < channels.length; i++) if (cats.indexOf(channels[i].cat) < 0) cats.push(channels[i].cat);
+        cats.forEach(function (c) {
+          var b = document.createElement("button");
           b.className = "chip" + (c === state.cat ? " active" : "");
           b.textContent = c;
-          b.onclick = () => {
+          b.onclick = function () {
             state.cat = c;
-            [...catBox.children].forEach(x => x.classList.toggle("active", x === b));
+            var siblings = catBox.children;
+            for (var s = 0; s < siblings.length; s++) siblings[s].classList.toggle("active", siblings[s] === b);
             render();
           };
           catBox.appendChild(b);
         });
       }
 
-      document.getElementById("search").oninput = e => { state.q = e.target.value.toLowerCase(); render(); };
-      document.getElementById("nowFilter").onchange = e => { state.mode = e.target.value; render(); };
+      document.getElementById("search").oninput = function (e) { state.q = e.target.value.toLowerCase(); render(); };
+      document.getElementById("nowFilter").onchange = function (e) { state.mode = e.target.value; render(); };
 
       function render() {
-        const grid = document.getElementById("grid");
+        var grid = document.getElementById("grid");
         grid.innerHTML = "";
-        channels.filter(c => state.cat === "Toutes" || c.cat === state.cat)
-          .forEach(c => {
-            const shows = c.shows
-              .slice()
-              .sort((a, b) => a.start - b.start)
-              .filter(s => s.title.toLowerCase().includes(state.q) || s.genre.toLowerCase().includes(state.q))
-              .filter(s => state.mode === "all" || (s.start <= nowTs && nowTs < s.end));
-            if (!shows.length) return;
-            const card = document.createElement("div");
-            card.className = "channel";
-            card.innerHTML = `
-              <div class="channel-head">
-                <div class="logo" style="background:${c.logo}">${c.name.slice(0, 2)}</div>
-                <div><h2>${c.name}</h2><div class="cat">${c.cat}</div></div>
-              </div>`;
-            // Vrai logo : logo officiel du guide, puis Clearbit, puis favicon, puis initiales
-            const logoBox = card.querySelector(".logo");
-            const img = document.createElement("img");
-            img.alt = "Logo " + c.name;
-            img.loading = "lazy";
-            img.src = c.icon || "https://logo.clearbit.com/" + c.site + "?size=84";
-            img.onerror = () => {
-              if (c.site) {
-                img.onerror = () => img.remove(); // garde les initiales
-                img.src = "https://www.google.com/s2/favicons?sz=64&domain=" + c.site;
-              } else img.remove();
-            };
-            logoBox.appendChild(img);
-            shows.forEach(s => {
-              const live = s.start <= nowTs && nowTs < s.end;
-              const past = s.end <= nowTs;
-              const row = document.createElement("div");
-              row.className = "slot" + (live ? " live" : "") + (past ? " past" : "");
-              row.innerHTML = `<time>${s.time}</time>
-                <div class="info"><div class="title">${s.title}</div><div class="genre">${s.genre}</div></div>`;
-              card.appendChild(row);
-            });
-            grid.appendChild(card);
+        var any = false;
+        channels.forEach(function (c) {
+          if (state.cat !== "Toutes" && c.cat !== state.cat) return;
+          var shows = c.shows
+            .slice()
+            .sort(function (a, b) { return a.start - b.start; })
+            .filter(function (s) { return s.title.toLowerCase().indexOf(state.q) >= 0 || s.genre.toLowerCase().indexOf(state.q) >= 0; })
+            .filter(function (s) { return state.mode === "all" || (s.start <= nowTs && nowTs < s.end); });
+          if (!shows.length) return;
+          any = true;
+          var card = document.createElement("div");
+          card.className = "channel";
+          card.innerHTML =
+            '<div class="channel-head">' +
+              '<div class="logo" style="background:' + c.logo + '">' + c.name.slice(0, 2) + '</div>' +
+              '<div><h2>' + c.name + '</h2><div class="cat">' + c.cat + '</div></div>' +
+            '</div>';
+          // Vrai logo : logo officiel du guide, puis Clearbit, puis favicon, puis initiales
+          var logoBox = card.querySelector(".logo");
+          var img = document.createElement("img");
+          img.alt = "Logo " + c.name;
+          img.loading = "lazy";
+          img.src = c.icon || ("https://logo.clearbit.com/" + c.site + "?size=84");
+          img.onerror = function () {
+            if (c.site) {
+              img.onerror = function () { img.remove(); }; // garde les initiales
+              img.src = "https://www.google.com/s2/favicons?sz=64&domain=" + c.site;
+            } else img.remove();
+          };
+          logoBox.appendChild(img);
+          shows.forEach(function (s) {
+            var live = s.start <= nowTs && nowTs < s.end;
+            var past = s.end <= nowTs;
+            var row = document.createElement("div");
+            row.className = "slot" + (live ? " live" : "") + (past ? " past" : "");
+            row.innerHTML = "<time>" + s.time + "</time>" +
+              '<div class="info"><div class="title">' + s.title + '</div><div class="genre">' + s.genre + "</div></div>";
+            card.appendChild(row);
           });
-        if (!grid.children.length) grid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#9aa3b2;padding:40px'>Aucune émission trouvée.</p>";
+          grid.appendChild(card);
+        });
+        if (!any) grid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#9aa3b2;padding:40px'>Aucune émission trouvée.</p>";
       }
       buildChips();
       render();
