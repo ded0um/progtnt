@@ -33,19 +33,22 @@
         flex-wrap: wrap;
         gap: 10px;
         justify-content: center;
+        align-items: center;
         padding: 16px;
         background: var(--card);
       }
-      .toolbar input, .toolbar select {
+      .toolbar select {
         background: var(--card2);
         color: var(--text);
-        border: 1px solid #33394900;
+        border: 1px solid #333949;
         border-radius: 8px;
         padding: 10px 14px;
         font-size: 0.95rem;
         outline: none;
+        cursor: pointer;
       }
-      .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
+      .toolbar select:focus { border-color: var(--accent); }
+      
       .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
       .chip {
         background: var(--card2);
@@ -122,10 +125,10 @@
     </header>
 
     <div class="toolbar">
-      <input type="search" id="search" placeholder="Rechercher une émission…" />
-      <input type="date" id="dayPicker" />
-      <select id="modeFilter"></select>
-      <div class="chips" id="categories"></div>
+      <!-- Menu déroulant pour le choix du jour -->
+      <select id="daySelect"></select>
+      <!-- Commutateur (chips) pour le mode d'affichage -->
+      <div class="chips" id="modeChips"></div>
     </div>
 
     <div class="grid" id="grid"></div>
@@ -148,120 +151,120 @@
           { time: "21:00", title: "Complément d'enquête", genre: "Documentaire" },
           { time: "22:40", title: "Théâtre : Le Misanthrope", genre: "Culture" },
         ]},
-        { name: "France 3", logo: "#0a7d4f", site: "france.tv", cat: "Généraliste", shows: [
+        { name: "France 3", site: "france.tv", logo: "#0a7d4f", cat: "Généraliste", shows: [
           { time: "17:30", title: "Slam", genre: "Jeu" },
           { time: "19:00", title: "19/20 National", genre: "Info" },
           { time: "20:55", title: "Tout le sport", genre: "Sport" },
           { time: "22:15", title: "Des racines et des ailes", genre: "Documentaire" },
         ]},
-        { name: "France 5", logo: "#e6b800", site: "france.tv", cat: "Généraliste", shows: [
+        { name: "France 5", site: "france.tv", logo: "#e6b800", cat: "Généraliste", shows: [
           { time: "09:50", title: "C dans l'air", genre: "Magazine" },
           { time: "20:55", title: "Le Doc : Nos campagnes", genre: "Documentaire" },
           { time: "22:30", title: "La Grande Librairie", genre: "Culture" },
         ]},
-        { name: "M6", logo: "#ffcc00", site: "m6.fr", cat: "Généraliste", shows: [
+        { name: "M6", site: "m6.fr", cat: "Généraliste", shows: [
           { time: "18:30", title: "Scènes de ménages", genre: "Série" },
           { time: "20:45", title: "Capital", genre: "Magazine" },
           { time: "21:40", title: "Film : Intouchables", genre: "Film" },
           { time: "23:35", title: "Hexagone", genre: "Magazine" },
         ]},
-        { name: "Arte", logo: "#ff4b12", site: "arte.tv", cat: "Culture", shows: [
+        { name: "Arte", site: "arte.tv", cat: "Culture", shows: [
           { time: "16:45", title: "Karambolage", genre: "Culture" },
           { time: "20:55", title: "Le Doc du soir : Océans", genre: "Documentaire" },
           { time: "22:30", title: "Concert : Orchestre de Paris", genre: "Culture" },
         ]},
-        { name: "LCP / Public Sénat", logo: "#003366", site: "lcp.fr", cat: "Info", shows: [
+        { name: "LCP / Public Sénat", site: "lcp.fr", cat: "Info", shows: [
           { time: "18:30", title: "Questions au gouvernement", genre: "Info" },
           { time: "20:30", title: "Le grand rendez-vous", genre: "Info" },
           { time: "22:00", title: "LCP Assemblée nationale", genre: "Info" },
         ]},
-        { name: "W9", logo: "#7a00ff", site: "w9.fr", cat: "Généraliste", shows: [
+        { name: "W9", site: "w9.fr", cat: "Généraliste", shows: [
           { time: "17:40", title: "W9 Mag", genre: "Magazine" },
           { time: "20:50", title: "Film : Bienvenue chez les Ch'tis", genre: "Film" },
           { time: "22:45", title: "Top Hits : les clips", genre: "Musique" },
         ]},
-        { name: "TMC", logo: "#e6007e", site: "tmc.tf1.fr", cat: "Généraliste", shows: [
+        { name: "TMC", site: "tmc.tf1.fr", cat: "Généraliste", shows: [
           { time: "19:20", title: "Quotidien", genre: "Magazine" },
           { time: "21:05", title: "Film : Le Grand Restaurant", genre: "Film" },
           { time: "22:50", title: "African Tours", genre: "Magazine" },
         ]},
-        { name: "TFX", logo: "#ff6600", site: "tfx.tf1.fr", cat: "Généraliste", shows: [
+        { name: "TFX", site: "tfx.tf1.fr", cat: "Généraliste", shows: [
           { time: "18:15", title: "Un dîner presque parfait", genre: "Divertissement" },
           { time: "21:00", title: "Film : Bronzés 3", genre: "Film" },
           { time: "22:40", title: "Sept à Huit Life", genre: "Magazine" },
         ]},
-        { name: "Gulli", logo: "#8bc34a", site: "gulli.fr", cat: "Jeunesse", shows: [
+        { name: "Gulli", site: "gulli.fr", cat: "Jeunesse", shows: [
           { time: "14:00", title: "Pokémon", genre: "Jeunesse" },
           { time: "17:10", title: "Miraculous : Les Aventures de Ladybug", genre: "Jeunesse" },
           { time: "20:00", title: "Film d'animation : Kirikou", genre: "Jeunesse" },
           { time: "21:30", title: "Gulli Ciné Club", genre: "Jeunesse" },
         ]},
-        { name: "BFM TV", logo: "#d40000", site: "bfmtv.com", cat: "Info", shows: [
+        { name: "BFM TV", site: "bfmtv.com", cat: "Info", shows: [
           { time: "18:00", title: "Au coeur du crime", genre: "Info" },
           { time: "20:00", title: "Le 20-00", genre: "Info" },
           { time: "22:00", title: "BFM Story", genre: "Info" },
         ]},
-        { name: "CNews", logo: "#1e90ff", site: "cnews.fr", cat: "Info", shows: [
+        { name: "CNews", site: "cnews.fr", cat: "Info", shows: [
           { time: "19:45", title: "L'Heure des Pros", genre: "Info" },
           { time: "21:00", title: "Punchline", genre: "Info" },
           { time: "23:00", title: "La libre opinion", genre: "Info" },
         ]},
-        { name: "LCI", logo: "#c8102e", site: "lci.fr", cat: "Info", shows: [
+        { name: "LCI", site: "lci.fr", cat: "Info", shows: [
           { time: "18:20", title: "Le Grand Journal", genre: "Info" },
           { time: "20:30", title: "24H BFM/LCI", genre: "Info" },
           { time: "22:00", title: "On se dit tout", genre: "Info" },
         ]},
-        { name: "France Info", logo: "#ff3d00", site: "francetvinfo.fr", cat: "Info", shows: [
+        { name: "France Info", site: "francetvinfo.fr", cat: "Info", shows: [
           { time: "19:30", title: "Le Monde d'élise", genre: "Info" },
           { time: "20:00", title: "JT de 20h", genre: "Info" },
           { time: "22:00", title: "L'info du vrai", genre: "Info" },
         ]},
-        { name: "T18", logo: "#2196f3", site: "t18.fr", cat: "Généraliste", shows: [
+        { name: "T18", site: "t18.fr", cat: "Généraliste", shows: [
           { time: "19:00", title: "Le 18-20", genre: "Magazine" },
           { time: "21:00", title: "Film : La Famille Bélier", genre: "Film" },
           { time: "22:40", title: "La Grande Interview", genre: "Info" },
         ]},
-        { name: "OF TV", logo: "#009688", site: "oftv.fr", cat: "Généraliste", shows: [
+        { name: "OF TV", site: "oftv.fr", cat: "Généraliste", shows: [
           { time: "13:30", title: "OF Mag régional", genre: "Magazine" },
           { time: "20:55", title: "Documentaire : Nos terroirs", genre: "Documentaire" },
           { time: "22:00", title: "Le débat Ouest-France", genre: "Info" },
         ]},
-        { name: "France 4", logo: "#f47b20", site: "france.tv", cat: "Jeunesse", shows: [
+        { name: "France 4", site: "france.tv", cat: "Jeunesse", shows: [
           { time: "14:20", title: "Les Z'amours des ados", genre: "Jeunesse" },
           { time: "17:00", title: "L'École des fans", genre: "Jeunesse" },
           { time: "20:35", title: "Fort Boyard", genre: "Divertissement" },
         ]},
-        { name: "CStar", logo: "#9c27b0", site: "cstar.fr", cat: "Généraliste", shows: [
+        { name: "CStar", site: "cstar.fr", cat: "Généraliste", shows: [
           { time: "18:40", title: "L'œil du tigri", genre: "Divertissement" },
           { time: "20:50", title: "Film : The Greatest Showman", genre: "Film" },
           { time: "22:35", title: "Le Tube : clips et hits", genre: "Musique" },
         ]},
-        { name: "RMC Story", logo: "#ff5722", site: "rmcstory.fr", cat: "Généraliste", shows: [
+        { name: "RMC Story", site: "rmcstory.fr", cat: "Généraliste", shows: [
           { time: "17:55", title: "Apocalypse : la série", genre: "Documentaire" },
           { time: "20:55", title: "Doc : Chocs du siècle", genre: "Documentaire" },
           { time: "22:30", title: "Les Enquêtes impossibles", genre: "Documentaire" },
         ]},
-        { name: "RMC Découverte", logo: "#ff9800", site: "rmcdecouverte.fr", cat: "Documentaire", shows: [
+        { name: "RMC Découverte", site: "rmcdecouverte.fr", cat: "Documentaire", shows: [
           { time: "20:40", title: "Doc : Le monde des trains", genre: "Documentaire" },
           { time: "21:45", title: "Top Gear France", genre: "Divertissement" },
           { time: "22:40", title: "Doc : Chantiers XXL", genre: "Documentaire" },
         ]},
-        { name: "TF1 Séries Films", logo: "#3f51b5", site: "tf1seriesfilms.fr", cat: "Cinéma / Séries", shows: [
+        { name: "TF1 Séries Films", site: "tf1seriesfilms.fr", cat: "Cinéma / Séries", shows: [
           { time: "15:00", title: "Série : Camping Paradis", genre: "Série" },
           { time: "20:55", title: "Série : Le Grand Jour", genre: "Série" },
           { time: "22:30", title: "Film : Qu'est-ce qu'on a fait au Bon Dieu ?", genre: "Film" },
         ]},
-        { name: "6ter", logo: "#00bcd4", site: "6ter.fr", cat: "Généraliste", shows: [
+        { name: "6ter", site: "6ter.fr", cat: "Généraliste", shows: [
           { time: "18:10", title: "Un jour, un doc", genre: "Documentaire" },
           { time: "20:45", title: "Film : Astérix et Obélix", genre: "Film" },
           { time: "22:40", title: "Mécaniques du monde", genre: "Documentaire" },
         ]},
-        { name: "RéelsTV", logo: "#e91e63", site: "reelstv.fr", cat: "Documentaire", shows: [
+        { name: "RéelsTV", site: "reelstv.fr", cat: "Documentaire", shows: [
           { time: "20:50", title: "Doc : Histoires vraies", genre: "Documentaire" },
           { time: "21:55", title: "Enquête de terrain", genre: "Documentaire" },
           { time: "23:00", title: "Le vrai du faux", genre: "Magazine" },
         ]},
-        { name: "Gong", logo: "#607d8b", site: "gong.fr", cat: "Jeunesse", shows: [
+        { name: "Gong", site: "gong.fr", cat: "Jeunesse", shows: [
           { time: "14:30", title: "Anime : Naruto", genre: "Jeunesse" },
           { time: "18:00", title: "Anime : One Piece", genre: "Jeunesse" },
           { time: "20:00", title: "Anime Movie : Your Name", genre: "Jeunesse" },
@@ -276,21 +279,19 @@
       function dateFromYmd(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
       const todayStr = ymd(now);
 
-      // Affiche toute erreur JS dans le badge (diagnostic)
       window.onerror = function (msg) {
         var b = document.getElementById("source");
         if (b) { b.textContent = "⚠ Erreur : " + msg; b.style.color = "#ef4444"; }
       };
 
-      // Le repli (données d'exemple) est calé sur aujourd'hui
       var todayStart = dateFromYmd(todayStr).getTime();
       DATA.forEach(function (c) { c.shows.forEach(function (s) {
         s.start = todayStart + toMin(s.time) * 60000;
         s.end = s.start + 90 * 60000;
       }); });
 
-      var channels = DATA; // remplacé par les vrais programmes si l'API répond
-      var state = { q: "", cat: "Toutes", mode: "now", date: todayStr };
+      var channels = DATA;
+      var state = { mode: "now", date: todayStr };
 
       function refreshDateLabel() {
         var d = dateFromYmd(state.date);
@@ -300,7 +301,6 @@
       }
       refreshDateLabel();
 
-      // ===== Vrais programmes : guide XMLTV de la TNT, mis à jour chaque nuit =====
       var BASE_URL = "https://raw.githubusercontent.com/Catch-up-TV-and-More/xmltv/master/";
       function apiUrl(dateStr) {
         return dateStr === todayStr
@@ -314,14 +314,14 @@
         var e = parent.getElementsByTagName(tag)[0];
         return e && e.textContent ? e.textContent.trim() : def;
       }
-      var META = DATA; // couleurs + catégories + ordre TNT
+      var META = DATA;
       function metaFor(name) {
         var key = norm(name), i;
         for (i = 0; i < META.length; i++) if (norm(META[i].name) === key) return META[i];
         for (i = 0; i < META.length; i++) {
           if (key.indexOf(norm(META[i].name)) === 0 || norm(META[i].name).indexOf(key) === 0) return META[i];
         }
-        return null; // chaîne hors TNT : ignorée
+        return null;
       }
       function parseXmltvDate(s) {
         var m = (s || "").match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/);
@@ -350,7 +350,6 @@
                 icon: iconEl ? iconEl.getAttribute("src") : null
               };
             }
-            // Fenêtre large : nuit précédente jusqu'à 3h du matin suivant
             var winStart = dayStart - 6 * 3600000, winEnd = dayEnd + 3 * 3600000;
             var byCh = {}, progs = xml.getElementsByTagName("programme");
             for (var k = 0; k < progs.length; k++) {
@@ -358,7 +357,7 @@
               var info = infos[p.getAttribute("channel")];
               if (!info) continue;
               var meta = metaFor(info.name);
-              if (!meta) continue; // chaîne hors TNT
+              if (!meta) continue;
               var start = parseXmltvDate(p.getAttribute("start"));
               if (start === null) continue;
               var end = parseXmltvDate(p.getAttribute("stop"));
@@ -376,7 +375,6 @@
             var list = [], key2;
             for (key2 in byCh) list.push(byCh[key2]);
             if (!list.length) throw new Error("aucun programme pour cette date");
-            // Ordre TNT : celui de META, les inconnues à la fin
             list.sort(function (a, b) {
               var ra = 99, rb = 99;
               for (var m2 = 0; m2 < META.length; m2++) {
@@ -399,58 +397,63 @@
             badge.textContent = "○ Indisponible (" + e.message + ")";
             badge.style.color = "#f59e0b";
           })
-          .then(function () { buildModeSelect(); buildChips(); render(); });
+          .then(function () { buildModeChips(); render(); });
       }
 
-      function buildModeSelect() {
-        var sel = document.getElementById("modeFilter");
+      function buildDaySelect() {
+        var sel = document.getElementById("daySelect");
+        sel.innerHTML = "";
+        for (var i = 0; i < 7; i++) {
+          var dStr = ymd(new Date(todayStart + i * 86400000));
+          var label;
+          if (i === 0) label = "Aujourd'hui";
+          else if (i === 1) label = "Demain";
+          else {
+            var wd = dateFromYmd(dStr).toLocaleDateString("fr-FR", { weekday: "long" });
+            label = wd.charAt(0).toUpperCase() + wd.slice(1);
+          }
+          var opt = document.createElement("option");
+          opt.value = dStr;
+          opt.textContent = label;
+          if (dStr === state.date) opt.selected = true;
+          sel.appendChild(opt);
+        }
+        sel.onchange = function (e) {
+          state.date = e.target.value;
+          if (state.date !== todayStr && state.mode === "now") {
+            state.mode = "day";
+          }
+          refreshDateLabel();
+          buildModeChips();
+          loadPrograms();
+        };
+      }
+
+      function buildModeChips() {
+        var box = document.getElementById("modeChips");
+        box.innerHTML = "";
         var isToday = state.date === todayStr;
         if (!isToday && state.mode === "now") state.mode = "day";
-        var opts = isToday
-          ? [["now", "En ce moment"], ["evening", "Ce soir"], ["day", "Toute la journée"]]
-          : [["day", "Toute la journée"], ["evening", "Ce soir"]];
-        sel.innerHTML = "";
-        opts.forEach(function (o) {
-          var op = document.createElement("option");
-          op.value = o[0];
-          op.textContent = o[1];
-          if (o[0] === state.mode) op.selected = true;
-          sel.appendChild(op);
-        });
-      }
+        
+        var modes = [];
+        if (isToday) modes.push({ id: "now", label: "En ce moment" });
+        modes.push({ id: "evening", label: "Ce soir" });
+        modes.push({ id: "day", label: "Toute la journée" });
 
-      function buildChips() {
-        var catBox = document.getElementById("categories");
-        catBox.innerHTML = "";
-        var cats = ["Toutes"], i;
-        for (i = 0; i < channels.length; i++) if (cats.indexOf(channels[i].cat) < 0) cats.push(channels[i].cat);
-        cats.forEach(function (c) {
+        modes.forEach(function (m) {
           var b = document.createElement("button");
-          b.className = "chip" + (c === state.cat ? " active" : "");
-          b.textContent = c;
+          b.className = "chip" + (m.id === state.mode ? " active" : "");
+          b.textContent = m.label;
+          b.dataset.mode = m.id;
           b.onclick = function () {
-            state.cat = c;
-            var siblings = catBox.children;
-            for (var s = 0; s < siblings.length; s++) siblings[s].classList.toggle("active", siblings[s] === b);
+            state.mode = this.dataset.mode;
+            var siblings = box.children;
+            for (var s = 0; s < siblings.length; s++) siblings[s].classList.toggle("active", siblings[s] === this);
             render();
           };
-          catBox.appendChild(b);
+          box.appendChild(b);
         });
       }
-
-      document.getElementById("search").oninput = function (e) { state.q = e.target.value.toLowerCase(); render(); };
-      document.getElementById("modeFilter").onchange = function (e) { state.mode = e.target.value; render(); };
-      var picker = document.getElementById("dayPicker");
-      picker.value = todayStr;
-      picker.min = todayStr;
-      picker.max = ymd(new Date(todayStart + 7 * 86400000)); // 7 jours de guide disponibles
-      picker.onchange = function (e) {
-        if (!e.target.value) return;
-        state.date = e.target.value;
-        state.mode = state.date === todayStr ? "now" : "day";
-        refreshDateLabel();
-        loadPrograms();
-      };
 
       function render() {
         var grid = document.getElementById("grid");
@@ -458,14 +461,12 @@
         var any = false;
         var dayStart = dateFromYmd(state.date).getTime();
         var dayEnd = dayStart + 86400000;
-        var eveStart = dayStart + 18 * 3600000; // 18h
-        var eveEnd = dayStart + 26 * 3600000;   // 2h du matin suivant
+        var eveStart = dayStart + 18 * 3600000;
+        var eveEnd = dayStart + 26 * 3600000;
         channels.forEach(function (c) {
-          if (state.cat !== "Toutes" && c.cat !== state.cat) return;
           var shows = c.shows
             .slice()
-            .sort(function (a, b) { return a.start - b.start; })
-            .filter(function (s) { return s.title.toLowerCase().indexOf(state.q) >= 0 || s.genre.toLowerCase().indexOf(state.q) >= 0; });
+            .sort(function (a, b) { return a.start - b.start; });
           if (state.mode === "now") {
             var idx = -1;
             for (var s2 = 0; s2 < shows.length; s2++) {
@@ -474,7 +475,7 @@
             if (idx < 0) {
               shows = shows.filter(function (s) { return s.start > nowTs; }).slice(0, 3);
             } else {
-              shows = shows.slice(Math.max(0, idx - 1), idx + 3); // précédent + en cours + 2 suivants
+              shows = shows.slice(Math.max(0, idx - 1), idx + 3);
             }
           } else if (state.mode === "evening") {
             shows = shows.filter(function (s) { return s.end > eveStart && s.start < eveEnd; });
@@ -490,7 +491,6 @@
               '<div class="logo" style="background:' + c.logo + '"><span class="init">' + c.name.slice(0, 2) + "</span></div>" +
               '<div><h2>' + c.name + '</h2><div class="cat">' + c.cat + '</div></div>' +
             '</div>';
-          // Vrai logo : logo officiel du guide, puis Clearbit, puis favicon, puis initiales
           var logoBox = card.querySelector(".logo");
           var img = document.createElement("img");
           img.alt = "Logo " + c.name;
@@ -498,11 +498,11 @@
           img.src = c.icon || ("https://logo.clearbit.com/" + c.site + "?size=84");
           img.onload = function () {
             var sp = logoBox.querySelector(".init");
-            if (sp) sp.style.display = "none"; // masque les initiales dès que le vrai logo est chargé
+            if (sp) sp.style.display = "none";
           };
           img.onerror = function () {
             if (c.site) {
-              img.onerror = function () { img.remove(); }; // garde les initiales
+              img.onerror = function () { img.remove(); };
               img.src = "https://www.google.com/s2/favicons?sz=64&domain=" + c.site;
             } else img.remove();
           };
@@ -520,8 +520,9 @@
         });
         if (!any) grid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#9aa3b2;padding:40px'>Aucune émission trouvée.</p>";
       }
-      buildModeSelect();
-      buildChips();
+      
+      buildDaySelect();
+      buildModeChips();
       render();
       loadPrograms();
     </script>
