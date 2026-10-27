@@ -33,9 +33,16 @@
       header h1 { font-size: 1.1rem; letter-spacing: 0.5px; }
 
       .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
         display: flex;
         gap: 6px;
         align-items: center;
+        justify-content: flex-end;
+        background: var(--card);
+        padding: 8px 16px;
+        border-bottom: 1px solid #262b38;
       }
       .toolbar select {
         background: var(--card2);
@@ -172,11 +179,11 @@
   <body>
     <header>
       <h1>Programme TNT</h1>
-      <div class="toolbar">
-        <select id="daySelect"></select>
-        <div class="chips" id="modeChips"></div>
-      </div>
     </header>
+    <div class="toolbar">
+      <select id="daySelect"></select>
+      <div class="chips" id="modeChips"></div>
+    </div>
 
     <div class="grid" id="grid"></div>
 
