@@ -579,8 +579,13 @@
               shows = shows.slice(Math.max(0, idx - 1), idx + 3);
             }
           } else if (state.mode === "evening") {
-            // 1re et 2e partie de soirée uniquement (pas au-delà)
-            shows = shows.filter(function (s) { return s.start >= eveStart && s.start < eveEnd; }).slice(0, 2);
+            // 1re et 2e parties de soirée uniquement :
+            // on écarte les petits programmes de transition (météo, loterie,
+            // brief magazines de moins de 30 min) puis on garde les 2 suivants.
+            shows = shows
+              .filter(function (s) { return s.start >= eveStart && s.start < eveEnd; })
+              .filter(function (s) { return (s.end - s.start) >= 30 * 60000; })
+              .slice(0, 2);
           } else {
             shows = shows.filter(function (s) { return s.end > dayStart && s.start < dayEnd; });
           }
