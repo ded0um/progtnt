@@ -579,13 +579,16 @@
               shows = shows.slice(Math.max(0, idx - 1), idx + 3);
             }
           } else if (state.mode === "evening") {
-            // 1re et 2e parties de soirée uniquement :
-            // on écarte les petits programmes de transition (météo, loterie,
-            // brief magazines de moins de 30 min) puis on garde les 2 suivants.
-            shows = shows
+            // Soir : on écarte les petits programmes de transition (< 30 min),
+            // on affiche les 1re et 2e parties de soirée, plus tout programme
+            // "non court" qui débute avant 23h.
+            var limit23 = dayStart + 23 * 3600000;
+            var evening = shows
               .filter(function (s) { return s.start >= eveStart && s.start < eveEnd; })
-              .filter(function (s) { return (s.end - s.start) >= 30 * 60000; })
-              .slice(0, 2);
+              .filter(function (s) { return (s.end - s.start) >= 30 * 60000; });
+            var before23 = 0;
+            while (before23 < evening.length && evening[before23].start < limit23) before23++;
+            shows = evening.slice(0, Math.max(2, before23));
           } else {
             shows = shows.filter(function (s) { return s.end > dayStart && s.start < dayEnd; });
           }
