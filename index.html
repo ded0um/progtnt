@@ -304,26 +304,16 @@
         return null;
       }
 
-      // Correction robuste du décalage horaire UTC fourni dans les flux XMLTV
+      // CORRECTION DÉFINITIVE : Force l'interprétation des heures du XMLTV directement en heure locale 
+      // (en ignorant le décalage UTC du flux qui décale d'une heure)
       function parseXmltvDate(s) {
         if (!s) return null;
-        var m = s.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:\s([+-]\d{4}))?/);
+        var m = s.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
         if (!m) return null;
-        
         var year = +m[1], month = +m[2] - 1, day = +m[3];
         var hour = +m[4], min = +m[5], sec = +m[6];
         
-        if (m[7]) {
-          var tz = m[7];
-          var tzSign = tz.charAt(0) === '-' ? -1 : 1;
-          var tzHours = +tz.substr(1, 2);
-          var tzMins = +tz.substr(3, 2);
-          var tzTotalMins = tzSign * (tzHours * 60 + tzMins);
-          
-          var utcMs = Date.UTC(year, month, day, hour, min, sec);
-          return utcMs - (tzTotalMins * 60000);
-        }
-        
+        // On construit directement la date en heure locale de l'appareil
         return new Date(year, month, day, hour, min, sec).getTime();
       }
 
@@ -502,7 +492,6 @@
             var row = document.createElement("div");
             row.className = "slot" + (live ? " live" : "") + (past ? " past" : "");
             
-            // Affichage de l'heure de début et de fin
             var timeFormatted = s.time + " - " + hhmm(s.end);
 
             row.innerHTML = "<time>" + timeFormatted + "</time>" +
