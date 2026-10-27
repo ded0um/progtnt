@@ -99,7 +99,7 @@
       .channel-head .cat { font-size: .75rem; color: var(--muted); }
 
       .slot { display: flex; gap: 12px; padding: 10px 16px; border-top: 1px solid #262b38; }
-      .slot time { color: var(--accent); font-weight: 600; font-size: 0.85rem; min-width: 44px; }
+      .slot time { color: var(--accent); font-weight: 600; font-size: 0.8rem; min-width: 95px; white-space: nowrap; }
       .slot .info { flex: 1; }
       .slot .title { font-size: 0.92rem; }
       .slot .genre { font-size: 0.75rem; color: var(--muted); }
@@ -303,9 +303,28 @@
         }
         return null;
       }
+
+      // Correction robuste du décalage horaire UTC fourni dans les flux XMLTV
       function parseXmltvDate(s) {
-        var m = (s || "").match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/);
-        return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : null;
+        if (!s) return null;
+        var m = s.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:\s([+-]\d{4}))?/);
+        if (!m) return null;
+        
+        var year = +m[1], month = +m[2] - 1, day = +m[3];
+        var hour = +m[4], min = +m[5], sec = +m[6];
+        
+        if (m[7]) {
+          var tz = m[7];
+          var tzSign = tz.charAt(0) === '-' ? -1 : 1;
+          var tzHours = +tz.substr(1, 2);
+          var tzMins = +tz.substr(3, 2);
+          var tzTotalMins = tzSign * (tzHours * 60 + tzMins);
+          
+          var utcMs = Date.UTC(year, month, day, hour, min, sec);
+          return utcMs - (tzTotalMins * 60000);
+        }
+        
+        return new Date(year, month, day, hour, min, sec).getTime();
       }
 
       function loadPrograms() {
@@ -410,7 +429,7 @@
         modes.push({ id: "day", label: "Toute la journée" });
 
         modes.forEach(function (m) {
-          var b = document.button ? null : document.createElement("button");
+          var b = document.createElement("button");
           b.className = "chip" + (m.id === state.mode ? " active" : "");
           b.textContent = m.label;
           b.dataset.mode = m.id;
@@ -430,7 +449,6 @@
         var any = false;
         var dayStart = dateFromYmd(state.date).getTime();
         var dayEnd = dayStart + 86400000;
-        // Ce soir : à partir de 20h45 jusqu'à 6h du matin le lendemain
         var eveStart = dayStart + (20 * 3600000 + 45 * 60000); 
         var eveEnd = dayStart + 30 * 3600000;
 
@@ -483,7 +501,11 @@
             var past = s.end <= nowTs;
             var row = document.createElement("div");
             row.className = "slot" + (live ? " live" : "") + (past ? " past" : "");
-            row.innerHTML = "<time>" + s.time + "</time>" +
+            
+            // Affichage de l'heure de début et de fin
+            var timeFormatted = s.time + " - " + hhmm(s.end);
+
+            row.innerHTML = "<time>" + timeFormatted + "</time>" +
               '<div class="info"><div class="title">' + s.title + '</div><div class="genre">' + s.genre + "</div></div>";
             card.appendChild(row);
           });
