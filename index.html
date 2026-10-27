@@ -20,43 +20,44 @@
       body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
       header {
-        background: linear-gradient(135deg, #1a1d27, #2b1220);
-        padding: 24px 20px;
+        background: var(--card);
+        padding: 12px 16px;
         text-align: center;
-        border-bottom: 3px solid var(--accent);
+        border-bottom: 1px solid #262b38;
       }
-      header h1 { font-size: 1.6rem; letter-spacing: 1px; }
+      header h1 { font-size: 1.25rem; letter-spacing: 0.5px; }
 
       .toolbar {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
         justify-content: center;
         align-items: center;
-        padding: 16px;
-        background: var(--card);
+        padding: 10px 16px;
+        background: var(--bg);
+        border-bottom: 1px solid #262b38;
       }
       .toolbar select {
         background: var(--card2);
         color: var(--text);
         border: 1px solid #333949;
-        border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 0.95rem;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
         outline: none;
         cursor: pointer;
       }
       .toolbar select:focus { border-color: var(--accent); }
       
-      .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+      .chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
       .chip {
         background: var(--card2);
         border: none;
         color: var(--muted);
-        padding: 8px 16px;
+        padding: 6px 12px;
         border-radius: 999px;
         cursor: pointer;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         transition: all .2s;
       }
       .chip.active { background: var(--accent); color: #fff; }
@@ -65,7 +66,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
         gap: 16px;
-        padding: 20px;
+        padding: 16px;
         max-width: 1200px;
         margin: 0 auto;
       }
@@ -78,41 +79,71 @@
       .channel-head {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 14px 16px;
+        gap: 10px;
+        padding: 10px 14px;
         background: var(--card2);
       }
       .logo {
-        width: 42px; height: 42px;
-        border-radius: 10px;
+        width: 36px; height: 36px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         color: #fff;
         flex-shrink: 0;
         overflow: hidden;
       }
-      .logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; border-radius: 10px; }
-      .channel-head h2 { font-size: 1rem; }
-      .channel-head .cat { font-size: .75rem; color: var(--muted); }
+      .logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; border-radius: 8px; }
+      .channel-head h2 { font-size: 0.95rem; }
+      .channel-head .cat { font-size: .7rem; color: var(--muted); }
 
-      .slot { display: flex; gap: 12px; padding: 10px 16px; border-top: 1px solid #262b38; }
+      .slot { 
+        display: flex; 
+        gap: 12px; 
+        padding: 10px 14px; 
+        border-top: 1px solid #262b38; 
+        cursor: pointer; 
+        transition: background 0.15s;
+      }
+      .slot:hover { background: rgba(229, 9, 20, 0.05); }
       .slot time { color: var(--accent); font-weight: 600; font-size: 0.8rem; min-width: 95px; white-space: nowrap; }
       .slot .info { flex: 1; }
-      .slot .title { font-size: 0.92rem; }
+      .slot .title { font-size: 0.9rem; }
       .slot .genre { font-size: 0.75rem; color: var(--muted); }
+      .slot .seasons { font-size: 0.75rem; color: #38bdf8; font-weight: 500; margin-right: 6px; }
       .slot.live { background: rgba(34,197,94,.08); }
       .slot.live .title::after {
         content: " ● EN DIRECT";
         color: var(--live);
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         letter-spacing: 1px;
       }
       .slot.past { opacity: .45; }
 
-      footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 24px; }
+      /* Modale de synopsis */
+      .modal-backdrop {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center;
+        z-index: 1000; padding: 20px; backdrop-filter: blur(4px);
+      }
+      .modal-backdrop.open { display: flex; }
+      .modal {
+        background: var(--card); border: 1px solid #333949; border-radius: 14px;
+        width: 100%; max-width: 500px; padding: 24px; position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      }
+      .modal h3 { font-size: 1.2rem; margin-bottom: 6px; }
+      .modal .modal-time { color: var(--accent); font-weight: 600; font-size: 0.85rem; margin-bottom: 12px; }
+      .modal .modal-desc { font-size: 0.95rem; color: var(--muted); line-height: 1.5; margin-top: 12px; max-height: 60vh; overflow-y: auto; }
+      .modal-close {
+        position: absolute; top: 16px; right: 16px; background: var(--card2); border: none;
+        color: var(--text); width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+        font-weight: bold; display: flex; align-items: center; justify-content: center;
+      }
+      .modal-close:hover { background: var(--accent); }
+
       @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
     </style>
   </head>
@@ -128,139 +159,149 @@
 
     <div class="grid" id="grid"></div>
 
-    <footer>Programmes réels chargés depuis un guide XMLTV de la TNT (mise à jour chaque nuit). La variable <code>DATA</code> ne sert qu'en repli hors ligne.</footer>
+    <!-- Modale Synopsis -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <button class="modal-close" id="modalClose">✕</button>
+        <div id="modalChan" class="cat" style="margin-bottom: 4px;"></div>
+        <h3 id="modalTitle"></h3>
+        <div id="modalTime" class="modal-time"></div>
+        <div id="modalGenre" style="font-size: 0.8rem; color: var(--muted);"></div>
+        <div id="modalDesc" class="modal-desc">Aucun résumé disponible pour cette émission.</div>
+      </div>
+    </div>
 
     <script>
       const DATA = [
         { name: "TF1", logo: "#0055ff", site: "tf1.fr", cat: "Généraliste", shows: [
-          { time: "14:00", title: "Les Douze Coups de Midi", genre: "Jeu" },
-          { time: "20:50", title: "Capitaine Marleau", genre: "Série" },
-          { time: "21:45", title: "Grand Journal Spécial", genre: "Magazine" },
-          { time: "23:10", title: "Film : Le Grand Bleu", genre: "Film" },
+          { time: "14:00", title: "Les Douze Coups de Midi", genre: "Jeu", desc: "Quotidienne animée par Jean-Luc Reichmann." },
+          { time: "20:50", title: "Capitaine Marleau", genre: "Série", desc: "Une capitaine de gendarmerie fantasque résout des enquêtes avec finesse." },
+          { time: "21:45", title: "Grand Journal Spécial", genre: "Magazine", desc: "Édition spéciale consacrée à l'actualité." },
+          { time: "23:10", title: "Film : Le Grand Bleu", genre: "Film", desc: "L'histoire de Jacques Mayol et Enzo Molinari, rivaux et passionnés d'apnée." },
         ]},
         { name: "France 2", site: "france.tv", logo: "#0066cc", cat: "Généraliste", shows: [
-          { time: "16:00", title: "Un si grand soleil", genre: "Série" },
-          { time: "20:35", title: "Journal de 20h", genre: "Info" },
-          { time: "21:00", title: "Complément d'enquête", genre: "Documentaire" },
-          { time: "22:40", title: "Théâtre : Le Misanthrope", genre: "Culture" },
+          { time: "16:00", title: "Un si grand soleil", genre: "Série", desc: "Feuilleton quotidien tourné à Montpellier et ses environs." },
+          { time: "20:35", title: "Journal de 20h", genre: "Info", desc: "Toute l'actualité nationale et internationale." },
+          { time: "21:00", title: "Complément d'enquête", genre: "Documentaire", desc: "Magazine d'investigation présenté par Tristan Waleckx." },
+          { time: "22:40", title: "Théâtre : Le Misanthrope", genre: "Culture", desc: "Pièce classique de Molière mise à l'honneur." },
         ]},
         { name: "France 3", site: "france.tv", logo: "#0a7d4f", cat: "Généraliste", shows: [
-          { time: "17:30", title: "Slam", genre: "Jeu" },
-          { time: "19:00", title: "19/20 National", genre: "Info" },
-          { time: "20:55", title: "Tout le sport", genre: "Sport" },
-          { time: "22:15", title: "Des racines et des ailes", genre: "Documentaire" },
+          { time: "17:30", title: "Slam", genre: "Jeu", desc: "Jeu télévisé autour des mots croisés présenté par Théo Curin." },
+          { time: "19:00", title: "19/20 National", genre: "Info", desc: "L'information de la région et du pays." },
+          { time: "20:55", title: "Tout le sport", genre: "Sport", desc: "Toute l'actualité sportive quotidienne." },
+          { time: "22:15", title: "Des racines et des ailes", genre: "Documentaire", desc: "Évasion et découverte du patrimoine français." },
         ]},
         { name: "France 5", site: "france.tv", logo: "#e6b800", cat: "Généraliste", shows: [
-          { time: "09:50", title: "C dans l'air", genre: "Magazine" },
-          { time: "20:55", title: "Le Doc : Nos campagnes", genre: "Documentaire" },
-          { time: "22:30", title: "La Grande Librairie", genre: "Culture" },
+          { time: "09:50", title: "C dans l'air", genre: "Magazine", desc: "Débat quotidien autour des grands sujets d'actualité." },
+          { time: "20:55", title: "Le Doc : Nos campagnes", genre: "Documentaire", desc: "Immersion au cœur de la vie rurale." },
+          { time: "22:30", title: "La Grande Librairie", genre: "Culture", desc: "Magazine littéraire présenté par Augustin Trapenard." },
         ]},
         { name: "M6", site: "m6.fr", cat: "Généraliste", shows: [
-          { time: "18:30", title: "Scènes de ménages", genre: "Série" },
-          { time: "20:45", title: "Capital", genre: "Magazine" },
-          { time: "21:40", title: "Film : Intouchables", genre: "Film" },
-          { time: "23:35", title: "Hexagone", genre: "Magazine" },
+          { time: "18:30", title: "Scènes de ménages", genre: "Série", desc: "Le quotidien haut en couleur de plusieurs couples de générations différentes." },
+          { time: "20:45", title: "Capital", genre: "Magazine", desc: "Magazine économique présenté par Julien Courbet." },
+          { time: "21:40", title: "Film : Intouchables", genre: "Film", desc: "La rencontre improbable entre un aristocrate tétraplégique et un jeune de banlieue." },
+          { time: "23:35", title: "Hexagone", genre: "Magazine", desc: "Reportages et découvertes en France." },
         ]},
         { name: "Arte", site: "arte.tv", cat: "Culture", shows: [
-          { time: "16:45", title: "Karambolage", genre: "Culture" },
-          { time: "20:55", title: "Le Doc du soir : Océans", genre: "Documentaire" },
-          { time: "22:30", title: "Concert : Orchestre de Paris", genre: "Culture" },
+          { time: "16:45", title: "Karambolage", genre: "Culture", desc: "Petite émission ludique sur les particularités franco-allemandes." },
+          { time: "20:55", title: "Le Doc du soir : Océans", genre: "Documentaire", desc: "Exploration des profondeurs marines et de leur faune." },
+          { time: "22:30", title: "Concert : Orchestre de Paris", genre: "Culture", desc: "Prestation musicale symphonique d'exception." },
         ]},
         { name: "LCP / Public Sénat", site: "lcp.fr", cat: "Info", shows: [
-          { time: "18:30", title: "Questions au gouvernement", genre: "Info" },
-          { time: "20:30", title: "Le grand rendez-vous", genre: "Info" },
-          { time: "22:00", title: "LCP Assemblée nationale", genre: "Info" },
+          { time: "18:30", title: "Questions au gouvernement", genre: "Info", desc: "Retransmission des séances de questions à l'Assemblée." },
+          { time: "20:30", title: "Le grand rendez-vous", genre: "Info", desc: "Entretien politique approfondi." },
+          { time: "22:00", title: "LCP Assemblée nationale", genre: "Info", desc: "Retrouvez les débats parlementaires." },
         ]},
         { name: "W9", site: "w9.fr", cat: "Généraliste", shows: [
-          { time: "17:40", title: "W9 Mag", genre: "Magazine" },
-          { time: "20:50", title: "Film : Bienvenue chez les Ch'tis", genre: "Film" },
-          { time: "22:45", title: "Top Hits : les clips", genre: "Musique" },
+          { time: "17:40", title: "W9 Mag", genre: "Magazine", desc: "Faits divers et reportages de société." },
+          { time: "20:50", title: "Film : Bienvenue chez les Ch'tis", genre: "Film", desc: "Un directeur de poste muté par erreur dans le Nord de la France." },
+          { time: "22:45", title: "Top Hits : les clips", genre: "Musique", desc: "Sélection des clips musicaux du moment." },
         ]},
         { name: "TMC", site: "tmc.tf1.fr", cat: "Généraliste", shows: [
-          { time: "19:20", title: "Quotidien", genre: "Magazine" },
-          { time: "21:05", title: "Film : Le Grand Restaurant", genre: "Film" },
-          { time: "22:50", title: "African Tours", genre: "Magazine" },
+          { time: "19:20", title: "Quotidien", genre: "Magazine", desc: "Talk-show d'actualité et de culture présenté par Yann Barthès." },
+          { time: "21:05", title: "Film : Le Grand Restaurant", genre: "Film", desc: "Comédie culte avec Louis de Funès." },
+          { time: "22:50", title: "African Tours", genre: "Magazine", desc: "Découverte de paysages et cultures d'Afrique." },
         ]},
         { name: "TFX", site: "tfx.tf1.fr", cat: "Généraliste", shows: [
-          { time: "18:15", title: "Un dîner presque parfait", genre: "Divertissement" },
-          { time: "21:00", title: "Film : Bronzés 3", genre: "Film" },
-          { time: "22:40", title: "Sept à Huit Life", genre: "Magazine" },
+          { time: "18:15", title: "Un dîner presque parfait", genre: "Divertissement", desc: "Compétition culinaire entre candidats amateurs." },
+          { time: "21:00", title: "Film : Bronzés 3", genre: "Film", desc: "Retrouvailles des célèbres vacanciers du Club Med." },
+          { time: "22:40", title: "Sept à Huit Life", genre: "Magazine", desc: "Reportages sur les modes de vie actuels." },
         ]},
         { name: "Gulli", site: "gulli.fr", cat: "Jeunesse", shows: [
-          { time: "14:00", title: "Pokémon", genre: "Jeunesse" },
-          { time: "17:10", title: "Miraculous : Les Aventures de Ladybug", genre: "Jeunesse" },
-          { time: "20:00", title: "Film d'animation : Kirikou", genre: "Jeunesse" },
-          { time: "21:30", title: "Gulli Ciné Club", genre: "Jeunesse" },
+          { time: "14:00", title: "Pokémon", genre: "Jeunesse", desc: "Les aventures de Sacha et ses monstres de poche." },
+          { time: "17:10", title: "Miraculous : Les Aventures de Ladybug", genre: "Jeunesse", desc: "Deux lycéens parisiens se transforment en super-héros." },
+          { time: "20:00", title: "Film d'animation : Kirikou", genre: "Jeunesse", desc: "Le tout petit Kirikou doit sauver son village." },
+          { time: "21:30", title: "Gulli Ciné Club", genre: "Jeunesse", desc: "Cinéma familial et jeunesse." },
         ]},
         { name: "BFM TV", site: "bfmtv.com", cat: "Info", shows: [
-          { time: "18:00", title: "Au coeur du crime", genre: "Info" },
-          { time: "20:00", title: "Le 20-00", genre: "Info" },
-          { time: "22:00", title: "BFM Story", genre: "Info" },
+          { time: "18:00", title: "Au coeur du crime", genre: "Info", desc: "Immersion dans des affaires criminelles marquantes." },
+          { time: "20:00", title: "Le 20-00", genre: "Info", desc: "Le résumé complet de l'actualité du jour." },
+          { time: "22:00", title: "BFM Story", genre: "Info", desc: "Décryptage des faits forts de l'actualité." },
         ]},
         { name: "CNews", site: "cnews.fr", cat: "Info", shows: [
-          { time: "19:45", title: "L'Heure des Pros", genre: "Info" },
-          { time: "21:00", title: "Punchline", genre: "Info" },
-          { time: "23:00", title: "La libre opinion", genre: "Info" },
+          { time: "19:45", title: "L'Heure des Pros", genre: "Info", desc: "Débats et analyses autour de l'actualité." },
+          { time: "21:00", title: "Punchline", genre: "Info", desc: "Émission politique et de débat." },
+          { time: "23:00", title: "La libre opinion", genre: "Info", desc: "Échange de vues sur les grands thèmes du moment." },
         ]},
         { name: "LCI", site: "lci.fr", cat: "Info", shows: [
-          { time: "18:20", title: "Le Grand Journal", genre: "Info" },
-          { time: "20:30", title: "24H BFM/LCI", genre: "Info" },
-          { time: "22:00", title: "On se dit tout", genre: "Info" },
+          { time: "18:20", title: "Le Grand Journal", genre: "Info", desc: "Le point sur l'actualité du soir." },
+          { time: "20:30", title: "24H BFM/LCI", genre: "Info", desc: "Regard croisé sur l'information continue." },
+          { time: "22:00", title: "On se dit tout", genre: "Info", desc: "Débats et échanges d'opinions." },
         ]},
         { name: "France Info", site: "francetvinfo.fr", cat: "Info", shows: [
-          { time: "19:30", title: "Le Monde d'élise", genre: "Info" },
-          { time: "20:00", title: "JT de 20h", genre: "Info" },
-          { time: "22:00", title: "L'info du vrai", genre: "Info" },
+          { time: "19:30", title: "Le Monde d'élise", genre: "Info", desc: "Regard original sur l'information." },
+          { time: "20:00", title: "JT de 20h", genre: "Info", desc: "Journal d'information en flux continu." },
+          { time: "22:00", title: "L'info du vrai", genre: "Info", desc: "Analyse approfondie de l'actualité." },
         ]},
         { name: "T18", site: "t18.fr", cat: "Généraliste", shows: [
-          { time: "19:00", title: "Le 18-20", genre: "Magazine" },
-          { time: "21:00", title: "Film : La Famille Bélier", genre: "Film" },
-          { time: "22:40", title: "La Grande Interview", genre: "Info" },
+          { time: "19:00", title: "Le 18-20", genre: "Magazine", desc: "Magazine d'actualité et de divertissement." },
+          { time: "21:00", title: "Film : La Famille Bélier", genre: "Film", desc: "Une jeune fille entendante est la seule interprète de sa famille sourde." },
+          { time: "22:40", title: "La Grande Interview", genre: "Info", desc: "Entretien exclusif avec une personnalité." },
         ]},
         { name: "OF TV", site: "oftv.fr", cat: "Généraliste", shows: [
-          { time: "13:30", title: "OF Mag régional", genre: "Magazine" },
-          { time: "20:55", title: "Documentaire : Nos terroirs", genre: "Documentaire" },
-          { time: "22:00", title: "Le débat Ouest-France", genre: "Info" },
+          { time: "13:30", title: "OF Mag régional", genre: "Magazine", desc: "L'actualité des régions françaises vue par Ouest-France." },
+          { time: "20:55", title: "Documentaire : Nos terroirs", genre: "Documentaire", desc: "À la découverte des traditions locales." },
+          { time: "22:00", title: "Le débat Ouest-France", genre: "Info", desc: "Confrontation d'idées sur des sujets de société." },
         ]},
         { name: "France 4", site: "france.tv", cat: "Jeunesse", shows: [
-          { time: "14:20", title: "Les Z'amours des ados", genre: "Jeunesse" },
-          { time: "17:00", title: "L'École des fans", genre: "Jeunesse" },
-          { time: "20:35", title: "Fort Boyard", genre: "Divertissement" },
+          { time: "14:20", title: "Les Z'amours des ados", genre: "Jeunesse", desc: "Divertissement pour la jeunesse." },
+          { time: "17:00", title: "L'École des fans", genre: "Jeunesse", desc: "Chansons et bonne humeur avec des enfants." },
+          { time: "20:35", title: "Fort Boyard", genre: "Divertissement", desc: "Équipe de candidats défiant les épreuves du fort." },
         ]},
         { name: "CStar", site: "cstar.fr", cat: "Généraliste", shows: [
-          { time: "18:40", title: "L'œil du tigri", genre: "Divertissement" },
-          { time: "20:50", title: "Film : The Greatest Showman", genre: "Film" },
-          { time: "22:35", title: "Le Tube : clips et hits", genre: "Musique" },
+          { time: "18:40", title: "L'œil du tigri", genre: "Divertissement", desc: "Divertissement et culture pop." },
+          { time: "20:50", title: "Film : The Greatest Showman", genre: "Film", desc: "La naissance du show-business moderne par P.T. Barnum." },
+          { time: "22:35", title: "Le Tube : clips et hits", genre: "Musique", desc: "Enchaînement de clips musicaux." },
         ]},
         { name: "RMC Story", site: "rmcstory.fr", cat: "Généraliste", shows: [
-          { time: "17:55", title: "Apocalypse : la série", genre: "Documentaire" },
-          { time: "20:55", title: "Doc : Chocs du siècle", genre: "Documentaire" },
-          { time: "22:30", title: "Les Enquêtes impossibles", genre: "Documentaire" },
+          { time: "17:55", title: "Apocalypse : la série", genre: "Documentaire", desc: "Fresque historique sur les conflits mondiaux." },
+          { time: "20:55", title: "Doc : Chocs du siècle", genre: "Documentaire", desc: "Retour sur les événements qui ont marqué l'histoire." },
+          { time: "22:30", title: "Les Enquêtes impossibles", genre: "Documentaire", desc: "Mystères et affaires criminelles non élucidées." },
         ]},
         { name: "RMC Découverte", site: "rmcdecouverte.fr", cat: "Documentaire", shows: [
-          { time: "20:40", title: "Doc : Le monde des trains", genre: "Documentaire" },
-          { time: "21:45", title: "Top Gear France", genre: "Divertissement" },
-          { time: "22:40", title: "Doc : Chantiers XXL", genre: "Documentaire" },
+          { time: "20:40", title: "Doc : Le monde des trains", genre: "Documentaire", desc: "Voyage à travers les lignes ferroviaires légendaires." },
+          { time: "21:45", title: "Top Gear France", genre: "Divertissement", desc: "Défis automobiles déjantés." },
+          { time: "22:40", title: "Doc : Chantiers XXL", genre: "Documentaire", desc: "Les constructions les plus gigantesques de la planète." },
         ]},
         { name: "TF1 Séries Films", site: "tf1seriesfilms.fr", cat: "Cinéma / Séries", shows: [
-          { time: "15:00", title: "Série : Camping Paradis", genre: "Série" },
-          { time: "20:55", title: "Série : Le Grand Jour", genre: "Série" },
-          { time: "22:30", title: "Film : Qu'est-ce qu'on a fait au Bon Dieu ?", genre: "Film" },
+          { time: "15:00", title: "Série : Camping Paradis", genre: "Série", desc: "Tom Delorme accueille les vacanciers de son camping." },
+          { time: "20:55", title: "Série : Le Grand Jour", genre: "Série", desc: "Fiction dramatique et sentimentale." },
+          { time: "22:30", title: "Film : Qu'est-ce qu'on a fait au Bon Dieu ?", genre: "Film", desc: "Un couple bourgeois voit ses traditions chamboulées." },
         ]},
         { name: "6ter", site: "6ter.fr", cat: "Généraliste", shows: [
-          { time: "18:10", title: "Un jour, un doc", genre: "Documentaire" },
-          { time: "20:45", title: "Film : Astérix et Obélix", genre: "Film" },
-          { time: "22:40", title: "Mécaniques du monde", genre: "Documentaire" },
+          { time: "18:10", title: "Un jour, un doc", genre: "Documentaire", desc: "Découverte et reportages animaliers ou de société." },
+          { time: "20:45", title: "Film : Astérix et Obélix", genre: "Film", desc: "Aventures des irréductibles gaulois." },
+          { time: "22:40", title: "Mécaniques du monde", genre: "Documentaire", desc: "Fonctionnement des grandes machines industrielles." },
         ]},
         { name: "RéelsTV", site: "reelstv.fr", cat: "Documentaire", shows: [
-          { time: "20:50", title: "Doc : Histoires vraies", genre: "Documentaire" },
-          { time: "21:55", title: "Enquête de terrain", genre: "Documentaire" },
-          { time: "23:00", title: "Le vrai du faux", genre: "Magazine" },
+          { time: "20:50", title: "Doc : Histoires vraies", genre: "Documentaire", desc: "Récits de faits réels et extraordinaires." },
+          { time: "21:55", title: "Enquête de terrain", genre: "Documentaire", desc: "Reportages journalistiques au plus près du réel." },
+          { time: "23:00", title: "Le vrai du faux", genre: "Magazine", desc: "Vérification des informations et infox." },
         ]},
         { name: "Gong", site: "gong.fr", cat: "Jeunesse", shows: [
-          { time: "14:30", title: "Anime : Naruto", genre: "Jeunesse" },
-          { time: "18:00", title: "Anime : One Piece", genre: "Jeunesse" },
-          { time: "20:00", title: "Anime Movie : Your Name", genre: "Jeunesse" },
+          { time: "14:30", title: "Anime : Naruto", genre: "Jeunesse", desc: "Un jeune ninja turbulent aspire à devenir Hokage." },
+          { time: "18:00", title: "Anime : One Piece", genre: "Jeunesse", desc: "À la recherche du trésor ultime avec Luffy et son équipage." },
+          { time: "20:00", title: "Anime Movie : Your Name", genre: "Jeunesse", desc: "Deux lycéens constatent qu'ils échangent mystérieusement leurs corps." },
         ]},
       ];
 
@@ -276,6 +317,7 @@
       DATA.forEach(function (c) { c.shows.forEach(function (s) {
         s.start = todayStart + toMin(s.time) * 60000;
         s.end = s.start + 90 * 60000;
+        if (!s.desc) s.desc = "Aucun résumé disponible pour cette émission.";
       }); });
 
       var channels = DATA;
@@ -304,17 +346,40 @@
         return null;
       }
 
-      // CORRECTION DÉFINITIVE : Force l'interprétation des heures du XMLTV directement en heure locale 
-      // (en ignorant le décalage UTC du flux qui décale d'une heure)
       function parseXmltvDate(s) {
         if (!s) return null;
         var m = s.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
         if (!m) return null;
         var year = +m[1], month = +m[2] - 1, day = +m[3];
         var hour = +m[4], min = +m[5], sec = +m[6];
-        
-        // On construit directement la date en heure locale de l'appareil
         return new Date(year, month, day, hour, min, sec).getTime();
+      }
+
+      // Extraction des numéros de saison et d'épisode du XMLTV (xmltv_ns ou series-num)
+      function parseEpisode(progEl) {
+        var epNums = progEl.getElementsByTagName("episode-num");
+        for (var i = 0; i < epNums.length; i++) {
+          var system = epNums[i].getAttribute("system");
+          var val = epNums[i].textContent.trim();
+          if (system === "xmltv_ns") {
+            // Format xmltv_ns : "saison.episode." (indexé à 0)
+            var parts = val.split(".");
+            if (parts.length >= 2 && parts[0] !== "" && parts[1] !== "") {
+              var s = parseInt(parts[0], 10);
+              var e = parseInt(parts[1], 10);
+              if (!isNaN(s) && !isNaN(e)) {
+                return "S" + String(s + 1).padStart(2, "0") + "E" + String(e + 1).padStart(2, "0");
+              }
+            }
+          } else if (system === "onscreen" || !system) {
+            // Souvent au format S01E02 ou 1x2
+            var match = val.match(/S(\d+)[\s\w]*E(\d+)/i) || val.match(/(\d+)x(\d+)/);
+            if (match) {
+              return "S" + String(match[1]).padStart(2, "0") + "E" + String(match[2]).padStart(2, "0");
+            }
+          }
+        }
+        return null;
       }
 
       function loadPrograms() {
@@ -355,7 +420,9 @@
               byCh[info.name].shows.push({
                 time: hhmm(start), start: start, end: end,
                 title: elText(p, "title", "Programme"),
-                genre: elText(p, "category", "Programme")
+                genre: elText(p, "category", "Programme"),
+                desc: elText(p, "desc", "Aucun résumé disponible pour cette émission."),
+                episode: parseEpisode(p)
               });
             }
             var list = [], key2;
@@ -433,6 +500,23 @@
         });
       }
 
+      // Gestion de la modale synopsis
+      function openModal(channelName, show) {
+        document.getElementById("modalChan").textContent = channelName;
+        document.getElementById("modalTitle").textContent = show.title;
+        document.getElementById("modalTime").textContent = show.time + " - " + hhmm(show.end);
+        document.getElementById("modalGenre").textContent = "Genre : " + (show.genre || "Non spécifié") + (show.episode ? " — " + show.episode : "");
+        document.getElementById("modalDesc").textContent = show.desc;
+        document.getElementById("modalBackdrop").classList.add("open");
+      }
+
+      document.getElementById("modalClose").onclick = function() {
+        document.getElementById("modalBackdrop").classList.remove("open");
+      };
+      document.getElementById("modalBackdrop").onclick = function(e) {
+        if (e.target === this) this.classList.remove("open");
+      };
+
       function render() {
         var grid = document.getElementById("grid");
         grid.innerHTML = "";
@@ -486,6 +570,7 @@
             } else img.remove();
           };
           logoBox.appendChild(img);
+
           shows.forEach(function (s) {
             var live = s.start <= nowTs && nowTs < s.end;
             var past = s.end <= nowTs;
@@ -493,9 +578,14 @@
             row.className = "slot" + (live ? " live" : "") + (past ? " past" : "");
             
             var timeFormatted = s.time + " - " + hhmm(s.end);
+            var epHtml = s.episode ? '<span class="seasons">' + s.episode + '</span>' : '';
 
             row.innerHTML = "<time>" + timeFormatted + "</time>" +
-              '<div class="info"><div class="title">' + s.title + '</div><div class="genre">' + s.genre + "</div></div>";
+              '<div class="info"><div class="title">' + epHtml + s.title + '</div><div class="genre">' + s.genre + "</div></div>";
+            
+            // Écouteur de clic pour ouvrir la modale synopsis
+            row.onclick = function() { openModal(c.name, s); };
+
             card.appendChild(row);
           });
           grid.appendChild(card);
