@@ -62,10 +62,21 @@
       }
       .chip.active { background: var(--accent); color: #fff; }
 
-      /* Animation CSS Reveal */
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+      /* Effet Reveal au scroll (état initial caché) */
+      .channel {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        background: var(--card);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #262b38;
+      }
+
+      /* État visible lorsque l'élément entre à l'écran */
+      .channel.revealed {
+        opacity: 1;
+        transform: translateY(0);
       }
 
       .grid {
@@ -75,13 +86,6 @@
         padding: 16px;
         max-width: 1200px;
         margin: 0 auto;
-      }
-      .channel {
-        background: var(--card);
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #262b38;
-        animation: fadeInUp 0.3s ease-out forwards;
       }
       .channel-head {
         display: flex;
@@ -113,14 +117,12 @@
         border-top: 1px solid #262b38; 
         cursor: pointer; 
         transition: background 0.15s;
-        animation: fadeInUp 0.4s ease-out forwards;
       }
       .slot:hover { background: rgba(229, 9, 20, 0.05); }
       .slot time { color: var(--accent); font-weight: 600; font-size: 0.8rem; min-width: 95px; white-space: nowrap; }
       .slot .info { flex: 1; }
       .slot .title { font-size: 0.9rem; margin-bottom: 2px; }
       
-      /* Genre et saison alignés discrètement */
       .slot .meta-row {
         display: flex;
         justify-content: space-between;
@@ -532,6 +534,22 @@
         if (e.target === this) this.classList.remove("open");
       };
 
+      // Intersection Observer pour déclencher le reveal au défilement
+      function initScrollReveal() {
+        var observer = new IntersectionObserver(function(entries, observer) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("revealed");
+              observer.unobserve(entry.target); // On arrête d'observer une fois révélé
+            }
+          });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll(".channel").forEach(function(card) {
+          observer.observe(card);
+        });
+      }
+
       function render() {
         var grid = document.getElementById("grid");
         grid.innerHTML = "";
@@ -606,7 +624,13 @@
           });
           grid.appendChild(card);
         });
-        if (!any) grid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#9aa3b2;padding:40px'>Aucune émission trouvée.</p>";
+
+        if (!any) {
+          grid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#9aa3b2;padding:40px'>Aucune émission trouvée.</p>";
+        } else {
+          // Lancement de l'observer une fois les cartes insérées dans la grille
+          initScrollReveal();
+        }
       }
       
       buildDaySelect();
