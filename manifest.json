@@ -1,0 +1,21 @@
+
+{
+  "id": "/progtnt/",
+  "name":  "programme tnt (by Dedoum)",
+  "short_name": "TNT",
+  "description": "Consultez le programme TV de la TNT avec DEDOUM : retrouvez les chaînes et les émissions facilement.",
+  "start_url": "/progtnt/",
+  "scope": "/progtnt/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/progtnt/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
