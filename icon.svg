@@ -1,0 +1,316 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Bleu cyan du site -->
+    <linearGradient id="cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a5f3fc"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <!-- Fond bleu nuit -->
+    <linearGradient id="dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#222c40"/>
+      <stop offset="100%" stop-color="#080b12"/>
+    </linearGradient>
+
+    <!-- Métal argenté -->
+    <linearGradient id="silver" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+
+    <!-- Écran du téléviseur -->
+    <linearGradient id="screen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#164e63"/>
+      <stop offset="55%" stop-color="#0c2438"/>
+      <stop offset="100%" stop-color="#07111f"/>
+    </linearGradient>
+
+    <!-- Reflet -->
+    <linearGradient id="reflection" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Halo lumineux -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Ombre -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+      <feOffset dy="4"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope=".5"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Découpe circulaire -->
+    <clipPath id="badge">
+      <circle cx="256" cy="256" r="235"/>
+    </clipPath>
+  </defs>
+
+  <!-- Fond carré -->
+  <rect width="512" height="512" fill="#0b1120"/>
+
+  <!-- Cercle extérieur -->
+  <circle cx="256" cy="256" r="249" fill="url(#cyan)"/>
+
+  <!-- Fond intérieur -->
+  <circle cx="256" cy="256" r="235"
+          fill="url(#dark)"
+          stroke="#38bdf8"
+          stroke-width="3"/>
+
+  <!-- Cercle décoratif -->
+  <circle cx="256" cy="256" r="222"
+          fill="none"
+          stroke="#38bdf8"
+          stroke-width="1"
+          opacity=".25"/>
+
+  <g clip-path="url(#badge)">
+
+    <!-- Halo central -->
+    <ellipse cx="256" cy="220" rx="165" ry="120"
+             fill="#0ea5e9" opacity=".08"/>
+
+    <!-- Ondes de diffusion à gauche -->
+    <g fill="none"
+       stroke="url(#cyan)"
+       stroke-width="7"
+       stroke-linecap="round"
+       filter="url(#glow)">
+      <path d="M117 143 Q74 184 117 225" opacity=".65"/>
+      <path d="M137 157 Q105 184 137 211" opacity=".8"/>
+      <path d="M157 169 Q140 184 157 199"/>
+    </g>
+
+    <!-- Ondes de diffusion à droite -->
+    <g fill="none"
+       stroke="url(#cyan)"
+       stroke-width="7"
+       stroke-linecap="round"
+       filter="url(#glow)">
+      <path d="M395 143 Q438 184 395 225" opacity=".65"/>
+      <path d="M375 157 Q407 184 375 211" opacity=".8"/>
+      <path d="M355 169 Q372 184 355 199"/>
+    </g>
+
+    <!-- Antennes -->
+    <g fill="none"
+       stroke="url(#silver)"
+       stroke-width="9"
+       stroke-linecap="round"
+       filter="url(#shadow)">
+      <path d="M224 112 L192 78"/>
+      <path d="M288 112 L320 78"/>
+    </g>
+
+    <g fill="#e2e8f0" stroke="#64748b" stroke-width="1">
+      <circle cx="192" cy="78" r="6"/>
+      <circle cx="320" cy="78" r="6"/>
+    </g>
+
+    <!-- Corps du téléviseur -->
+    <g filter="url(#shadow)">
+
+      <rect x="112" y="111"
+            width="288" height="196"
+            rx="25"
+            fill="url(#silver)"
+            stroke="#f8fafc"
+            stroke-width="2"/>
+
+      <!-- Bord intérieur -->
+      <rect x="121" y="120"
+            width="270" height="178"
+            rx="19"
+            fill="#172033"
+            stroke="#64748b"
+            stroke-width="2"/>
+
+      <!-- Écran -->
+      <rect x="132" y="131"
+            width="248" height="156"
+            rx="13"
+            fill="url(#screen)"
+            stroke="#38bdf8"
+            stroke-width="2.5"/>
+
+      <!-- Reflet de l'écran -->
+      <path d="M145 138 H363
+               Q372 138 372 150
+               V165 Q260 202 145 257 Z"
+            fill="url(#reflection)"
+            opacity=".7"/>
+
+      <!-- Cercle lumineux derrière lecture -->
+      <circle cx="256" cy="209" r="43"
+              fill="#0284c7"
+              opacity=".15"/>
+
+      <!-- Bouton lecture -->
+      <circle cx="256" cy="209" r="34"
+              fill="#0c2438"
+              stroke="url(#cyan)"
+              stroke-width="2.5"
+              filter="url(#glow)"/>
+
+      <path d="M247 190
+               Q243 187 243 194
+               V224
+               Q243 231 250 227
+               L273 214
+               Q280 209 273 204 Z"
+            fill="url(#cyan)"
+            stroke="#e0f2fe"
+            stroke-width="1"/>
+
+      <!-- Voyants du téléviseur -->
+      <circle cx="369" cy="143" r="3.5" fill="#38bdf8"/>
+      <circle cx="369" cy="156" r="3.5" fill="#64748b"/>
+      <circle cx="369" cy="169" r="3.5" fill="#64748b"/>
+
+      <!-- Pieds -->
+      <path d="M177 307 L165 325 H215 L224 307 Z"
+            fill="url(#silver)"
+            stroke="#64748b"
+            stroke-width="1.5"/>
+
+      <path d="M288 307 L297 325 H347 L335 307 Z"
+            fill="url(#silver)"
+            stroke="#64748b"
+            stroke-width="1.5"/>
+    </g>
+
+    <!-- Télécommande -->
+    <g transform="rotate(17 383 286)" filter="url(#shadow)">
+
+      <!-- Corps extérieur -->
+      <rect x="361" y="225"
+            width="43" height="128"
+            rx="13"
+            fill="url(#silver)"
+            stroke="#f8fafc"
+            stroke-width="1.5"/>
+
+      <!-- Surface intérieure -->
+      <rect x="367" y="231"
+            width="31" height="116"
+            rx="9"
+            fill="#172033"
+            stroke="#38bdf8"
+            stroke-width="1.3"/>
+
+      <!-- Bouton marche -->
+      <circle cx="382.5" cy="246" r="6.5"
+              fill="#0c4a6e"
+              stroke="#38bdf8"
+              stroke-width="1.5"/>
+
+      <path d="M382.5 241 V247
+               M378.5 243
+               A5 5 0 1 0 386.5 243"
+            fill="none"
+            stroke="#bae6fd"
+            stroke-width="1.5"
+            stroke-linecap="round"/>
+
+      <!-- Pavé directionnel -->
+      <circle cx="382.5" cy="277" r="12"
+              fill="#263449"
+              stroke="#64748b"
+              stroke-width="1"/>
+
+      <path d="M382.5 269 L378.5 276 H386.5 Z"
+            fill="#e2e8f0"/>
+
+      <path d="M382.5 285 L378.5 278 H386.5 Z"
+            fill="#94a3b8"/>
+
+      <path d="M374.5 277 L381.5 273 V281 Z"
+            fill="#94a3b8"/>
+
+      <path d="M390.5 277 L383.5 273 V281 Z"
+            fill="#e2e8f0"/>
+
+      <!-- Boutons secondaires -->
+      <g fill="#38bdf8">
+        <circle cx="375" cy="300" r="2.5"/>
+        <circle cx="382.5" cy="300" r="2.5"/>
+        <circle cx="390" cy="300" r="2.5"/>
+
+        <circle cx="375" cy="309" r="2.5"/>
+        <circle cx="382.5" cy="309" r="2.5"/>
+        <circle cx="390" cy="309" r="2.5"/>
+
+        <circle cx="375" cy="318" r="2.5"/>
+        <circle cx="382.5" cy="318" r="2.5"/>
+        <circle cx="390" cy="318" r="2.5"/>
+
+        <circle cx="375" cy="327" r="2.5"/>
+        <circle cx="382.5" cy="327" r="2.5"/>
+        <circle cx="390" cy="327" r="2.5"/>
+      </g>
+    </g>
+
+    <!-- Séparateur lumineux -->
+    <path d="M110 355 Q256 370 402 355"
+          fill="none"
+          stroke="url(#cyan)"
+          stroke-width="2"
+          opacity=".8"
+          filter="url(#glow)"/>
+
+    <!-- Nom DEDOUM -->
+    <text x="256" y="405"
+          text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="48"
+          font-weight="900"
+          letter-spacing="2"
+          fill="#f4f6ff"
+          stroke="#38bdf8"
+          stroke-width="1"
+          paint-order="stroke fill"
+          filter="url(#shadow)">DEDOUM</text>
+
+    <!-- Soulignement -->
+    <path d="M157 418 H355"
+          stroke="url(#cyan)"
+          stroke-width="3"
+          stroke-linecap="round"
+          filter="url(#glow)"/>
+
+    <!-- Sous-titre -->
+    <text x="256" y="449"
+          text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="20"
+          font-weight="900"
+          letter-spacing="4"
+          fill="url(#cyan)">PROGRAMME TNT</text>
+
+
+
+    <!-- Trait inférieur -->
+    <path d="M205 466 H307"
+          stroke="#38bdf8"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          opacity=".5"/>
+
+  </g>
+</svg>
